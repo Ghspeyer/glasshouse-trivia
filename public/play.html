@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GlassHouse Trivia — Team View</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:  #0A1628;
+    --navy2: #08121F;
+    --cyan:  #00C8FF;
+    --cyan2: #0099CC;
+    --gold:  #FFD700;
+    --green: #00E676;
+    --red:   #FF6B6B;
+    --card:  rgba(255,255,255,0.05);
+    --border: rgba(0,200,255,0.18);
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--navy2);
+    color: #E8F4FD;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  #app { position: relative; z-index: 1; min-height: 100vh; }
+
+  /* ── TEAM SELECT ──────────────────────────────────────────────── */
+  #teamSelect {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh; padding: 24px 16px;
+    gap: 20px;
+  }
+
+  .logo-area { text-align: center; }
+  .logo-area .brand { font-size: 13px; letter-spacing: 4px; color: var(--cyan); text-transform: uppercase; opacity: 0.8; }
+  .logo-area h1 { font-size: clamp(26px, 6vw, 40px); font-weight: 800; color: #fff; margin-top: 6px; line-height: 1.1; }
+  .logo-area p  { font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 8px; }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 100%; max-width: 420px;
+  }
+
+  .team-btn {
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 22px 14px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--card);
+    backdrop-filter: blur(6px);
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .team-btn:active { transform: scale(0.96); }
+  .team-btn .t-emoji { font-size: 32px; margin-bottom: 8px; line-height: 1; }
+  .team-btn .t-color-bar { width: 40px; height: 5px; border-radius: 3px; margin: 0 auto 10px; }
+  .team-btn .t-name { font-size: 17px; font-weight: 700; color: #fff; word-break: break-word; }
+  .team-btn .t-members { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; line-height: 1.5; }
+
+  /* ── GAME VIEW ────────────────────────────────────────────────── */
+  #gameView { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* Header */
+  .play-header {
+    background: rgba(8,18,31,0.95);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .play-header .team-chip {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 700;
+  }
+  .team-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .team-emoji-hdr { font-size: 18px; line-height: 1; }
+  .change-team-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.45); font-size: 11px;
+    padding: 3px 8px; border-radius: 6px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .change-team-btn:active { background: rgba(255,255,255,0.1); }
+
+  /* Timer pill */
+  .timer-pill {
+    font-size: 22px; font-weight: 800; letter-spacing: 1px;
+    padding: 4px 14px; border-radius: 20px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    transition: color .3s, background .3s;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-pill.urgent { color: var(--red); background: rgba(255,107,107,0.12); }
+
+  /* Main content */
+  .play-main {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 20px 16px 100px; gap: 16px;
+    max-width: 600px; margin: 0 auto; width: 100%;
+  }
+
+  /* Round badge */
+  .round-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    font-weight: 700; color: var(--cyan);
+    opacity: 0.8;
+  }
+  .round-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* Question card */
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px 20px;
+    backdrop-filter: blur(6px);
+  }
+  .q-num { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .q-text {
+    font-size: clamp(17px, 4vw, 22px);
+    font-weight: 600;
+    line-height: 1.45;
+    color: #fff;
+    white-space: pre-wrap;
+  }
+  .q-diff { display: inline-block; margin-top: 12px; font-size: 11px; padding: 2px 10px; border-radius: 10px; }
+  .diff-1 { background: rgba(0,230,118,0.15); color: #00E676; }
+  .diff-2 { background: rgba(255,215,0,0.15);  color: #FFD700; }
+  .diff-3 { background: rgba(255,107,107,0.15); color: #FF6B6B; }
+
+  /* Answer form */
+  .answer-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(6px);
+  }
+  .answer-label { font-size: 12px; color: rgba(255,255,255,0.5); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+
+  .answer-input {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 16px;
+    padding: 14px 16px;
+    outline: none;
+    resize: vertical;
+    min-height: 70px;
+    font-family: inherit;
+    transition: border-color .2s;
+  }
+  .answer-input:focus { border-color: var(--cyan); }
+  .answer-input:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .submit-btn {
+    margin-top: 12px; width: 100%;
+    background: var(--cyan); color: var(--navy2);
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 800;
+    padding: 15px;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: 0.5px;
+  }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { background: rgba(0,200,255,0.3); color: rgba(255,255,255,0.4); cursor: not-allowed; }
+  .submit-btn.submitted { background: var(--green); color: #003320; }
+
+  .submit-status {
+    text-align: center; margin-top: 10px;
+    font-size: 13px; font-weight: 600;
+    min-height: 18px;
+  }
+  .submit-status.ok  { color: var(--green); }
+  .submit-status.err { color: var(--red); }
+
+  /* Answer reveal */
+  .answer-reveal {
+    background: rgba(0,200,255,0.08);
+    border: 1.5px solid rgba(0,200,255,0.35);
+    border-radius: 16px;
+    padding: 18px 20px;
+    animation: fadeIn .4s ease;
+  }
+  .answer-reveal .ar-label { font-size: 11px; color: var(--cyan); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .answer-reveal .ar-text  { font-size: 18px; font-weight: 700; color: #fff; white-space: pre-wrap; line-height: 1.4; }
+
+  /* Result banner */
+  .result-banner {
+    border-radius: 14px; padding: 16px 20px;
+    text-align: center; font-size: 22px; font-weight: 800;
+    animation: popIn .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    letter-spacing: 0.5px;
+  }
+  .result-banner.correct { background: rgba(0,230,118,0.2); border: 2px solid #00E676; color: #00E676; }
+  .result-banner.wrong   { background: rgba(255,107,107,0.2); border: 2px solid #FF6B6B; color: #FF6B6B; }
+
+  /* Scoreboard strip */
+  .score-strip {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .score-chip {
+    flex: 1; min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .score-chip .sc-emoji { font-size: 18px; line-height: 1; margin-bottom: 2px; }
+  .score-chip .sc-name { font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+  .score-chip .sc-pts  { font-size: 20px; font-weight: 800; }
+
+  /* Waiting states */
+  .waiting-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 24px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+  }
+  .waiting-card .wc-icon { font-size: 48px; margin-bottom: 16px; }
+  .waiting-card h2 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+  .waiting-card p  { font-size: 14px; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+  /* Round intro card */
+  .round-intro-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 24px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+  }
+  .round-intro-card .ri-num  { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; }
+  .round-intro-card .ri-name { font-size: clamp(24px, 6vw, 36px); font-weight: 800; color: #fff; margin-bottom: 8px; }
+  .round-intro-card .ri-note { font-size: 13px; color: rgba(255,255,255,0.45); margin-top: 6px; }
+
+  /* Final screen */
+  .final-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 24px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+  }
+  .final-card .winner-emoji { font-size: 52px; margin-bottom: 8px; }
+  .final-card h2 { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+  .final-card .winner-name { font-size: 28px; font-weight: 900; margin-bottom: 6px; }
+  .final-card .winner-members { font-size: 14px; color: rgba(255,255,255,0.55); margin-bottom: 20px; line-height: 1.6; }
+
+  .podium { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .podium-row {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 12px 16px;
+  }
+  .podium-rank { font-size: 20px; width: 28px; text-align: center; }
+  .podium-info { flex: 1; text-align: left; }
+  .podium-name { font-weight: 700; color: #fff; font-size: 16px; }
+  .podium-pts  { font-size: 13px; color: rgba(255,255,255,0.45); }
+  .final-hat-img { width: 90px; height: auto; display: block; margin: 16px auto 8px; }
+  .final-prize-txt { font-size: 13px; color: rgba(255,255,255,0.45); margin-top: 4px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes popIn  { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ════ TEAM SELECTION ════ -->
+  <div id="teamSelect">
+    <div class="logo-area">
+      <div class="brand">GlassHouse</div>
+      <h1>Trivia Night</h1>
+      <p>Select your team to join</p>
+    </div>
+    <div class="team-grid" id="teamGrid"></div>
+  </div>
+
+  <!-- ════ GAME VIEW ════ -->
+  <div id="gameView">
+
+    <div class="play-header">
+      <div class="team-chip" id="teamChip">
+        <div class="team-dot" id="headerDot"></div>
+        <span class="team-emoji-hdr" id="headerEmoji"></span>
+        <span id="headerTeamName">Your Team</span>
+      </div>
+      <div class="timer-pill" id="timerDisplay">–</div>
+      <button class="change-team-btn" id="changeTeamBtn">Change</button>
+    </div>
+
+    <div class="play-main" id="mainContent"></div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  const socket = io();
+
+  let state   = null;
+  let timer   = { sec: 30, running: false };
+  let teamIdx = null;
+
+  // ── Audio ────────────────────────────────────────────────────────
+  let audioCtx = null;
+  let audioUnlocked = false;
+
+  function getAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  function playTick() {
+    try {
+      const ctx = getAudio();
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 1100;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.07);
+    } catch(e) {}
+  }
+
+  function playBuzzer() {
+    try {
+      const ctx = getAudio();
+      // Two-tone buzz: a harsh low rumble that fades
+      [150, 120].forEach((freq, idx) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(freq * 0.7, ctx.currentTime + 0.9);
+        gain.gain.setValueAtTime(0.35 - idx * 0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+        osc.start(ctx.currentTime + idx * 0.05);
+        osc.stop(ctx.currentTime + 0.95);
+      });
+    } catch(e) {}
+  }
+
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    // Play a silent buffer to unlock AudioContext on iOS/Safari
+    try {
+      const ctx = getAudio();
+      if (ctx.state === 'suspended') ctx.resume();
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.connect(ctx.destination); src.start(0);
+    } catch(e) {}
+  }
+
+  // Unlock on first user gesture
+  document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+  document.addEventListener('click',      unlockAudio, { once: true });
+
+  // ── State ────────────────────────────────────────────────────────
+  let prevTimerSec = -1;
+
+  // ── Persistence ─────────────────────────────────────────────────
+  function loadTeam() {
+    const v = localStorage.getItem('gh_team');
+    return v !== null ? parseInt(v, 10) : null;
+  }
+  function saveTeam(idx) { localStorage.setItem('gh_team', String(idx)); }
+  function clearTeam()   { localStorage.removeItem('gh_team'); teamIdx = null; }
+
+  // ── DOM refs ─────────────────────────────────────────────────────
+  const $teamSelect = document.getElementById('teamSelect');
+  const $gameView   = document.getElementById('gameView');
+  const $teamGrid   = document.getElementById('teamGrid');
+  const $main       = document.getElementById('mainContent');
+  const $timer      = document.getElementById('timerDisplay');
+  const $headerDot  = document.getElementById('headerDot');
+  const $headerName = document.getElementById('headerTeamName');
+  const $headerEmoji= document.getElementById('headerEmoji');
+
+  document.getElementById('changeTeamBtn').addEventListener('click', () => {
+    clearTeam(); showTeamSelect();
+  });
+
+  // ── View switching ───────────────────────────────────────────────
+  function showTeamSelect() {
+    $teamSelect.style.display = 'flex';
+    $gameView.style.display   = 'none';
+    renderTeamSelect();
+  }
+  function showGame() {
+    $teamSelect.style.display = 'none';
+    $gameView.style.display   = 'flex';
+    updateHeader();
+    render();
+  }
+
+  // ── Team selection ───────────────────────────────────────────────
+  function renderTeamSelect() {
+    if (!state || !state.teams || state.teams.length === 0) {
+      $teamGrid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:14px;">
+          Waiting for the host to start the game…
+        </div>`;
+      return;
+    }
+    $teamGrid.innerHTML = '';
+    state.teams.forEach((team, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'team-btn';
+      btn.style.borderColor = team.color;
+      btn.style.boxShadow = `0 0 16px ${team.color}22`;
+      const members = team.members && team.members.length ? team.members.join(', ') : '';
+      btn.innerHTML = `
+        ${team.emoji ? `<div class="t-emoji">${team.emoji}</div>` : ''}
+        <div class="t-color-bar" style="background:${team.color}"></div>
+        <div class="t-name">${esc(team.name)}</div>
+        ${members ? `<div class="t-members">${esc(members)}</div>` : ''}
+      `;
+      btn.addEventListener('click', () => {
+        unlockAudio();
+        teamIdx = i; saveTeam(i); showGame();
+      });
+      $teamGrid.appendChild(btn);
+    });
+  }
+
+  // ── Header ───────────────────────────────────────────────────────
+  function updateHeader() {
+    if (!state || teamIdx === null) return;
+    const team = state.teams[teamIdx];
+    if (!team) return;
+    $headerDot.style.background = team.color;
+    $headerName.textContent = team.name;
+    $headerEmoji.textContent = team.emoji || '';
+  }
+
+  // ── Timer display ────────────────────────────────────────────────
+  function updateTimerDisplay() {
+    const s = timer.sec;
+    $timer.textContent = (s === 0 && !timer.running) ? '–' : String(s);
+    $timer.classList.toggle('urgent', s > 0 && s <= 10 && timer.running);
+  }
+
+  // ── Main render ──────────────────────────────────────────────────
+  function render() {
+    if (!state || teamIdx === null) return;
+
+    if (state.phase === 'setup') {
+      $main.innerHTML = waitingHTML('⏳', 'Game Starting Soon', 'The host is setting things up. Hang tight!');
+      return;
+    }
+    if (state.phase === 'final') { renderFinal(); return; }
+    if (state.phase === 'ri')    { renderRoundIntro(); return; }
+    if (state.phase === 'q')     { renderQuestion(); return; }
+  }
+
+  function waitingHTML(icon, title, sub) {
+    return `<div class="waiting-card">
+      <div class="wc-icon">${icon}</div>
+      <h2>${title}</h2>
+      <p>${sub}</p>
+    </div>` + scoreStripHTML();
+  }
+
+  function renderRoundIntro() {
+    const color = state.roundColor || '#00C8FF';
+    const note  = state.roundNote ? `<div class="ri-note">${esc(state.roundNote)}</div>` : '';
+    const board = state.scoreboardOpen ? scoreStripHTML() : '';
+
+    $main.innerHTML = `
+      <div class="round-badge">
+        <div class="round-badge-dot" style="background:${color}"></div>
+        Round ${state.roundNum} of ${state.roundTotal}
+      </div>
+      <div class="round-intro-card">
+        <div class="ri-num" style="color:${color}">Round ${state.roundNum}</div>
+        <div class="ri-name" style="color:${color}">${esc(state.roundName)}</div>
+        ${note}
+      </div>
+      ${board}
+    `;
+  }
+
+  function renderQuestion() {
+    const color = state.roundColor || '#00C8FF';
+    const diffLabels = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
+    const diff = state.qDiff;
+    const diffCls = diff === 1 ? 'diff-1' : diff === 2 ? 'diff-2' : 'diff-3';
+
+    const myAns    = state.answers && state.answers[teamIdx] ? state.answers[teamIdx] : null;
+    const myResult = state.results  && state.results[teamIdx]  ? state.results[teamIdx]  : null;
+    const submitted  = myAns && myAns.submitted;
+    const answerText = myAns ? myAns.answer : '';
+
+    const revealHTML = state.aText
+      ? `<div class="answer-reveal">
+           <div class="ar-label">✓ Correct Answer</div>
+           <div class="ar-text">${esc(state.aText)}</div>
+         </div>`
+      : '';
+
+    let resultHTML = '';
+    if (myResult === 'correct') {
+      resultHTML = `<div class="result-banner correct">✓ Correct! +1 point</div>`;
+    } else if (myResult === 'wrong') {
+      resultHTML = `<div class="result-banner wrong">✗ Not this time</div>`;
+    }
+
+    $main.innerHTML = `
+      <div class="round-badge">
+        <div class="round-badge-dot" style="background:${color}"></div>
+        ${esc(state.roundName)} &nbsp;·&nbsp; Q${state.qIdx + 1} of ${state.qTotal}
+      </div>
+
+      <div class="q-card">
+        <div class="q-num">Question ${state.qIdx + 1}</div>
+        <div class="q-text">${esc(state.qText)}</div>
+        ${diff ? `<span class="q-diff ${diffCls}">${diffLabels[diff] || ''}</span>` : ''}
+      </div>
+
+      ${revealHTML}
+      ${resultHTML}
+
+      <div class="answer-card">
+        <div class="answer-label">Your Answer</div>
+        <textarea
+          class="answer-input"
+          id="answerInput"
+          placeholder="Type your team's answer…"
+          rows="3"
+          ${myResult ? 'disabled' : ''}
+        >${esc(answerText)}</textarea>
+        <button class="submit-btn${submitted ? ' submitted' : ''}" id="submitBtn">
+          ${submitted ? '✓ Answer Submitted' : 'Submit Answer'}
+        </button>
+        <div class="submit-status" id="submitStatus"></div>
+      </div>
+
+      ${scoreStripHTML()}
+    `;
+
+    const $input  = document.getElementById('answerInput');
+    const $btn    = document.getElementById('submitBtn');
+    const $status = document.getElementById('submitStatus');
+
+    $btn.addEventListener('click', () => {
+      const answer = $input.value.trim();
+      if (!answer) {
+        $status.className = 'submit-status err';
+        $status.textContent = 'Please type an answer first.';
+        return;
+      }
+      socket.emit('play:answer', { round: state.round, qIdx: state.qIdx, teamIdx, answer });
+      $btn.classList.add('submitted');
+      $btn.textContent = '✓ Answer Submitted';
+      $status.className = 'submit-status ok';
+      $status.textContent = 'Submitted! You can update until the next question.';
+    });
+
+    $input.addEventListener('input', () => {
+      if ($input.value.trim()) {
+        $btn.classList.remove('submitted');
+        $btn.textContent = 'Submit Answer';
+        $status.textContent = '';
+      }
+    });
+  }
+
+  function renderFinal() {
+    const sorted = [...(state.teams || [])]
+      .map((t, i) => ({ ...t, _i: i }))
+      .sort((a, b) => b.score - a.score);
+
+    const winner  = sorted[0];
+    const medals  = ['🥇','🥈','🥉'];
+    const members = (winner.members || []).filter(Boolean);
+
+    const rows = sorted.map((t, rank) => `
+      <div class="podium-row">
+        <div class="podium-rank">${medals[rank] || (rank + 1)}</div>
+        <div class="podium-info">
+          <div class="podium-name">${t.emoji ? t.emoji + ' ' : ''}${esc(t.name)}</div>
+          <div class="podium-pts" style="color:${t.color}">${t.score} pts</div>
+        </div>
+      </div>
+    `).join('');
+
+    $main.innerHTML = `
+      <div class="final-card">
+        ${winner.emoji ? `<div class="winner-emoji">${winner.emoji}</div>` : '<div class="winner-emoji">🎉</div>'}
+        <h2>Congratulations,</h2>
+        <div class="winner-name" style="color:${winner.color}">${esc(winner.name)}!</div>
+        ${members.length ? `<div class="winner-members">${members.map(m => esc(m)).join('<br>')}</div>` : ''}
+        <div class="podium">${rows}</div>
+        <img src="hat.png" alt="Prize hat" class="final-hat-img" onerror="this.style.display='none'">
+        <div class="final-prize-txt">Winners take home a GlassHouse company hat — great game everyone!</div>
+      </div>
+    `;
+  }
+
+  function scoreStripHTML() {
+    if (!state || !state.teams || state.teams.length === 0) return '';
+    const chips = state.teams.map(t => `
+      <div class="score-chip">
+        ${t.emoji ? `<div class="sc-emoji">${t.emoji}</div>` : ''}
+        <div class="sc-name" style="color:${t.color}">${esc(t.name)}</div>
+        <div class="sc-pts" style="color:${t.color}">${t.score}</div>
+      </div>
+    `).join('');
+    return `<div class="score-strip">${chips}</div>`;
+  }
+
+  // ── Socket events ────────────────────────────────────────────────
+  socket.on('state', s => {
+    state = s;
+
+    if (teamIdx !== null && (!s.teams || !s.teams[teamIdx])) {
+      clearTeam(); showTeamSelect(); return;
+    }
+
+    if (teamIdx === null) { showTeamSelect(); }
+    else { updateHeader(); render(); }
+  });
+
+  socket.on('timer', t => {
+    const prev = timer;
+    timer = t;
+    updateTimerDisplay();
+
+    // Tick for last 10 seconds (only when sec actually changes)
+    if (t.running && t.sec > 0 && t.sec <= 10 && t.sec !== prev.sec) {
+      playTick();
+    }
+    // Buzzer when countdown reaches 0
+    if (prev.running && t.sec === 0) {
+      playBuzzer();
+    }
+  });
+
+  // ── Init ─────────────────────────────────────────────────────────
+  teamIdx = loadTeam();
+  if (teamIdx !== null) {
+    $teamSelect.style.display = 'none';
+    $gameView.style.display   = 'flex';
+  }
+
+  // ── Utils ────────────────────────────────────────────────────────
+  function esc(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/\n/g, '<br>');
+  }
+})();
+</script>
+</body>
+</html>

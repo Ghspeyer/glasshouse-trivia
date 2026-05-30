@@ -1,0 +1,307 @@
+'use strict';
+const express  = require('express');
+const http     = require('http');
+const { Server } = require('socket.io');
+const path     = require('path');
+const os       = require('os');
+
+const app        = express();
+const httpServer = http.createServer(app);
+const io         = new Server(httpServer, { cors: { origin: '*' } });
+const PORT       = process.env.PORT || 3000;
+
+// ════════════════════════════════════════════════════════════════════════════
+// GAME DATA
+// ════════════════════════════════════════════════════════════════════════════
+const TEAM_COLORS = ['#00C8FF', '#FF6B6B', '#FFD700', '#00E676'];
+
+const ROUNDS = [
+  {
+    name: 'General Knowledge', color: '#00C8FF',
+    questions: [
+      { q: 'How many bones does an adult human body have?', a: '206', d: 2 },
+      { q: 'What is the ONLY country in the world that borders both Spain AND France?', a: 'Andorra', d: 3 },
+      { q: 'What is the world\'s smallest country by area?', a: 'Vatican City', d: 2 },
+      { q: 'How many time zones does Russia span?', a: '11 time zones', d: 3 },
+      { q: 'What is the only U.S. state that commercially grows coffee?', a: 'Hawaii', d: 2 },
+    ]
+  },
+  {
+    name: 'World History', color: '#FFD700',
+    questions: [
+      { q: 'In what year did the Berlin Wall fall?', a: '1989', d: 1 },
+      { q: 'Who was the first woman to win a Nobel Prize?', a: 'Marie Curie (1903 · Physics)', d: 2 },
+      { q: 'How many amendments does the United States Constitution currently have?', a: '27 amendments', d: 3 },
+      { q: 'The Black Death of the 14th century killed approximately what fraction of Europe\'s population?\n(Accept a range)', a: 'One-third to one-half (accept 30–60%)', d: 3 },
+      { q: 'In what year did the Western Roman Empire officially fall?', a: '476 AD', d: 3 },
+    ]
+  },
+  {
+    name: 'Name That Tune', color: '#BB86FC',
+    note: 'Host plays a clip — name the song AND artist. All songs from 1980 onward.',
+    questions: [
+      { q: 'Song 1', a: '—', d: 1 },
+      { q: 'Song 2', a: '—', d: 2 },
+      { q: 'Song 3', a: '—', d: 2 },
+      { q: 'Song 4', a: '—', d: 3 },
+      { q: 'Song 5', a: '—', d: 3 },
+    ]
+  },
+  {
+    name: 'Movie Quotes', color: '#FF6B6B',
+    note: 'Name the film (and actor/character when asked). All films from 1980 onward.',
+    questions: [
+      { q: 'In what 1996 sports dramedy does a desperate agent try to win back his estranged wife with a heartfelt speech, only for her to stop him mid-sentence with "You had me at hello"?\n\nName the film.', a: 'Jerry Maguire (1996)', d: 2 },
+      { q: 'In what 1984 sci-fi thriller does a relentless cyborg calmly inform a police sergeant — moments before destroying the entire precinct — that "I\'ll be back"?\n\nName the film AND the actor who played the cyborg.', a: 'The Terminator (1984) — Arnold Schwarzenegger', d: 2 },
+      { q: 'In what 2008 Christopher Nolan film does the villain lean toward a hospitalized city official and whisper "Why so serious?" while recounting how he got his scars?\n\nName the film AND the actor who played the villain.', a: 'The Dark Knight (2008) — Heath Ledger', d: 3 },
+      { q: 'In what 1994 film do two hitmen debate whether a foot massage qualifies as intimacy, while one casually notes that a "Royale with Cheese" is just the French name for a Quarter Pounder?\n\nName the film AND its director.', a: 'Pulp Fiction (1994) — Quentin Tarantino', d: 3 },
+      { q: 'In what 1980 psychological horror film does a snowbound hotel caretaker — slowly losing his mind — hack through a bathroom door with an axe and shout "Here\'s Johnny!" at his terrified wife?\n\nName the film AND its director.', a: 'The Shining (1980) — Stanley Kubrick', d: 3 },
+    ]
+  },
+  {
+    name: '90s & 2000s Hits', color: '#FFB74D',
+    questions: [
+      { q: 'Which beloved sitcom featured a character named "Cosmo Kramer"?', a: 'Seinfeld', d: 1 },
+      { q: 'Destiny\'s Child released "Say My Name" in what year? (±1 year accepted)', a: '1999', d: 2 },
+      { q: 'What was the name of the coffee shop where the Friends gang always hung out?', a: 'Central Perk', d: 1 },
+      { q: 'Which boy band released the mega-hit album "Millennium" in 1999, featuring "I Want It That Way"?', a: 'Backstreet Boys', d: 2 },
+      { q: 'What year did "American Idol" first air in the United States, and who won that inaugural season?', a: '2002 · Kelly Clarkson', d: 3 },
+    ]
+  },
+  {
+    name: 'Back In My Day', color: '#00E676',
+    questions: [
+      { q: 'What classic toy was a plastic coiled spring that could "walk" down stairs?', a: 'Slinky', d: 1 },
+      { q: 'Before smartphones, what portable device let people listen to CDs on the go?', a: 'Discman / Portable CD Player', d: 1 },
+      { q: 'This video rental giant had nearly 9,000 stores worldwide at its peak.\nName it AND the year it filed for bankruptcy.', a: 'Blockbuster · 2010', d: 3 },
+      { q: 'What was the name of the dominant dial-up internet service that mailed millions of Americans free trial CDs throughout the 1990s?', a: 'AOL (America Online)', d: 2 },
+      { q: 'The Motorola DynaTAC 8000X, introduced in 1983, holds what distinction in consumer technology — and approximately how much did it cost at launch?', a: 'First commercially available handheld cellular phone · ~$3,995', d: 3 },
+    ]
+  },
+  {
+    name: 'Potent Potables', color: '#FF6B6B',
+    questions: [
+      { q: 'What spirit forms the base of a classic Mojito?', a: 'Rum (White Rum)', d: 1 },
+      { q: 'Which country is the original home of Guinness beer?', a: 'Ireland', d: 1 },
+      { q: 'A classic Negroni has exactly three ingredients.\nName all three for full credit.', a: 'Gin + Campari + Sweet Vermouth\n(must name all 3)', d: 3 },
+      { q: 'Tequila can only legally be produced in certain regions of Mexico.\nWhat specific plant must it be made from?', a: 'Blue Agave (Weber blue agave)', d: 2 },
+      { q: 'The "Last Word" cocktail — popularized during Prohibition — is made with four equal-part ingredients.\nName all four for full credit.', a: 'Gin + Green Chartreuse + Maraschino Liqueur + Fresh Lime Juice\n(must name all 4)', d: 3 },
+    ]
+  },
+  {
+    name: 'Sports & Pop Culture', color: '#FFD700',
+    questions: [
+      { q: 'Who holds the record for the most Grand Slam titles in women\'s tennis singles history?', a: 'Serena Williams (23 titles)', d: 2 },
+      { q: 'What city hosted the 2024 Summer Olympics?', a: 'Paris, France', d: 1 },
+      { q: 'What country has won the most FIFA World Cup titles?\n(Bonus: how many times?)', a: 'Brazil — 5 times\n(1958, 1962, 1970, 1994, 2002)', d: 3 },
+      { q: 'In what year did Michael Jordan win his FIRST NBA Championship with the Chicago Bulls?', a: '1991', d: 2 },
+      { q: 'Which NFL quarterback was first to throw for more than 5,000 yards in a single regular season, and in what year?', a: 'Dan Marino (Miami Dolphins) · 1984', d: 3 },
+    ]
+  },
+  {
+    name: 'Food & Travel', color: '#00C8FF',
+    questions: [
+      { q: 'What is the most visited country in the world by international tourists?', a: 'France', d: 2 },
+      { q: 'Sushi originated in which country?', a: 'Japan', d: 1 },
+      { q: 'What spice — harvested from the stigmas of a specific flower — is the most expensive spice in the world by weight?', a: 'Saffron', d: 3 },
+      { q: 'Which country consumes the most chocolate per capita in the world?', a: 'Switzerland', d: 2 },
+      { q: '"Ceviche" is a dish where raw seafood is "cooked" without heat.\nWhat country is credited as its origin, and what acid is traditionally used to cure the fish?', a: 'Peru · Lime juice (citric acid)', d: 3 },
+    ]
+  },
+];
+
+// ════════════════════════════════════════════════════════════════════════════
+// GAME STATE
+// ════════════════════════════════════════════════════════════════════════════
+let G = initState();
+
+function initState() {
+  return {
+    phase: 'setup',   // setup | ri | q | final
+    teams: [],
+    round: 0,
+    qIdx: -1,
+    answerShown: false,
+    answers: {},
+    submitted: {},
+    results: {},
+    scoreboardOpen: false,
+  };
+}
+
+let timer = { sec: 30, running: false };
+let timerId = null;
+
+// ════════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+function key(r, q, t) { return `r${r}q${q}t${t}`; }
+
+function publicState() {
+  const r = G.phase !== 'setup' ? ROUNDS[G.round] : null;
+  const q = r && G.qIdx >= 0 ? r.questions[G.qIdx] : null;
+
+  const ans = {}, res = {};
+  if (q) {
+    G.teams.forEach((_, i) => {
+      const k = key(G.round, G.qIdx, i);
+      ans[i] = { answer: G.answers[k] || '', submitted: !!G.submitted[k] };
+      res[i] = G.results[k] || null;
+    });
+  }
+
+  return {
+    phase:          G.phase,
+    round:          G.round,
+    qIdx:           G.qIdx,
+    roundName:      r?.name        || '',
+    roundNum:       G.round + 1,
+    roundTotal:     ROUNDS.length,
+    roundColor:     r?.color       || '#00C8FF',
+    roundNote:      r?.note        || '',
+    qTotal:         r?.questions.length || 0,
+    qText:          q?.q           || '',
+    qDiff:          q?.d           || 0,
+    aText:          (G.answerShown && q) ? q.a : '',
+    answerShown:    G.answerShown,
+    teams:          G.teams.map(t => ({ name: t.name, members: t.members, score: t.score, color: t.color, emoji: t.emoji || '' })),
+    answers:        ans,
+    results:        res,
+    scoreboardOpen: G.scoreboardOpen,
+  };
+}
+
+function bcast() { io.emit('state', publicState()); }
+
+// ════════════════════════════════════════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════════════════════════════════════════
+function startTimer() {
+  if (timer.running) return;
+  timer.running = true;
+  timerId = setInterval(() => {
+    timer.sec = Math.max(0, timer.sec - 1);
+    io.emit('timer', { ...timer });
+    if (timer.sec === 0) stopTimer();
+  }, 1000);
+  io.emit('timer', { ...timer });
+}
+function stopTimer()  { clearInterval(timerId); timer.running = false; io.emit('timer', { ...timer }); }
+function resetTimer() { stopTimer(); timer.sec = 30; io.emit('timer', { ...timer }); }
+
+// ════════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════════════════════
+function doNext() {
+  resetTimer();
+  G.answerShown = false;
+  G.scoreboardOpen = false;
+
+  if (G.phase === 'ri') {
+    G.qIdx = 0; G.phase = 'q';
+  } else if (G.phase === 'q') {
+    const qLen = ROUNDS[G.round].questions.length;
+    if (G.qIdx < qLen - 1) {
+      G.qIdx++;
+    } else if (G.round < ROUNDS.length - 1) {
+      G.round++; G.qIdx = -1; G.phase = 'ri';
+      if (G.round === 3 || G.round === 6) G.scoreboardOpen = true;
+    } else {
+      G.phase = 'final';
+    }
+  }
+  bcast();
+}
+
+function doPrev() {
+  resetTimer();
+  G.answerShown = false;
+  if      (G.phase === 'q' && G.qIdx > 0)          { G.qIdx--; }
+  else if (G.phase === 'q' && G.qIdx === 0)         { G.qIdx = -1; G.phase = 'ri'; }
+  else if (G.phase === 'ri' && G.round > 0)         { G.round--; G.qIdx = ROUNDS[G.round].questions.length - 1; G.phase = 'q'; }
+  bcast();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SOCKET.IO
+// ════════════════════════════════════════════════════════════════════════════
+io.on('connection', socket => {
+  socket.emit('state', publicState());
+  socket.emit('timer', { ...timer });
+
+  socket.on('register:host', () => socket.join('host'));
+
+  socket.on('host:setup', teams => {
+    G = initState();
+    G.phase = 'ri';
+    G.teams = teams.map((t, i) => ({
+      name:    t.name    || `Team ${i+1}`,
+      members: t.members || [],
+      emoji:   t.emoji   || '',
+      score:   0,
+      color:   TEAM_COLORS[i],
+    }));
+    resetTimer();
+    bcast();
+  });
+
+  socket.on('host:next',   doNext);
+  socket.on('host:prev',   doPrev);
+
+  socket.on('host:reveal', () => { G.answerShown = !G.answerShown; bcast(); });
+
+  socket.on('host:score', ({ teamIdx, delta }) => {
+    if (!G.teams[teamIdx]) return;
+    G.teams[teamIdx].score = Math.max(0, G.teams[teamIdx].score + delta);
+    const k = key(G.round, G.qIdx, teamIdx);
+    if (G.qIdx >= 0) G.results[k] = delta > 0 ? 'correct' : (delta < 0 ? 'wrong' : null);
+    bcast();
+  });
+
+  socket.on('host:scoreboard', () => { G.scoreboardOpen = !G.scoreboardOpen; bcast(); });
+
+  socket.on('host:timer', ({ action }) => {
+    if (action === 'start') startTimer();
+    else if (action === 'stop') stopTimer();
+    else if (action === 'reset') resetTimer();
+  });
+
+  socket.on('play:answer', ({ round, qIdx, teamIdx, answer }) => {
+    if (G.phase !== 'q') return;
+    if (round !== G.round || qIdx !== G.qIdx) return;
+    if (teamIdx < 0 || teamIdx >= G.teams.length) return;
+    const k = key(round, qIdx, teamIdx);
+    G.answers[k]   = answer;
+    G.submitted[k] = true;
+    bcast();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// STATIC FILES & ROUTES
+// ════════════════════════════════════════════════════════════════════════════
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('/',     (_req, res) => res.redirect('/play'));
+app.get('/host', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'host.html')));
+app.get('/play', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'play.html')));
+
+// ════════════════════════════════════════════════════════════════════════════
+// START
+// ════════════════════════════════════════════════════════════════════════════
+function getLocalIP() {
+  for (const iface of Object.values(os.networkInterfaces()))
+    for (const a of iface)
+      if (a.family === 'IPv4' && !a.internal) return a.address;
+  return 'localhost';
+}
+
+httpServer.listen(PORT, () => {
+  const ip = getLocalIP();
+  console.log('\n🎉  GlassHouse Trivia Night — Server Running\n');
+  console.log(`   HOST (you):      http://localhost:${PORT}/host`);
+  console.log(`   TEAMS share:     http://${ip}:${PORT}/play\n`);
+  console.log('   Keep this window open during the game.');
+  console.log('   Press Ctrl+C to stop.\n');
+  console.log('   TIP: For remote teams outside your network,');
+  console.log(`   run: npx ngrok http ${PORT}  and share the ngrok URL.\n`);
+});
