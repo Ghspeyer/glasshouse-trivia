@@ -540,18 +540,14 @@ function renderHost() {
       </div>
     </div>
 
-    <!-- Correct answer (host only — always visible) -->
-    ${localQ?`<div class="hp">
-      <div class="hp-lbl">Correct Answer (Host Only)</div>
-      <div class="host-ans-box">
-        <div class="host-ans-lbl">Answer</div>
-        <div class="host-ans-txt">${esc(localQ.a)}</div>
-      </div>
-    </div>`:''}
-
-    <!-- Live team answers -->
+    <!-- Team answers + correct answer (all hidden until Reveal is pressed) -->
     <div class="hp">
-      <div class="hp-lbl">Team Answers <span style="opacity:.4;font-size:9px;">(live from players)</span></div>
+      <div class="hp-lbl">
+        Team Answers
+        ${S.answerShown
+          ? ''
+          : '<span style="opacity:.4;font-size:9px;"> — hidden until you reveal</span>'}
+      </div>
       ${S.teams.map((t,i)=>{
         const ans = S.answers[i]||{answer:'',submitted:false};
         const res = S.results[i];
@@ -569,17 +565,25 @@ function renderHost() {
             <div class="tr-score" style="color:${t.color}">${t.score}</div>
           </div>
           <div class="tr-ans">
-            ${ans.submitted
-              ? `<span class="tr-ans-txt">${esc(ans.answer)}</span>`
-              : `<span class="tr-ans-pending">Waiting for answer…</span>`}
+            ${S.answerShown
+              ? (ans.submitted
+                  ? `<span class="tr-ans-txt">${esc(ans.answer)}</span>`
+                  : `<span class="tr-ans-none">No answer submitted</span>`)
+              : (ans.submitted
+                  ? `<span class="tr-ans-received">✓ Answer received</span>`
+                  : `<span class="tr-ans-pending">Waiting…</span>`)}
           </div>
           ${resultBar}
-          <div class="tr-btns">
+          ${S.answerShown ? `<div class="tr-btns">
             <button class="btn-ok yes" onclick="addPt(${i})">✓ +1</button>
             <button class="btn-ok no"  onclick="subPt(${i})">✗ Undo</button>
-          </div>
+          </div>` : ''}
         </div>`;
       }).join('')}
+      ${localQ && S.answerShown ? `<div class="host-ans-box" style="margin-top:10px;">
+        <div class="host-ans-lbl">✓ Correct Answer</div>
+        <div class="host-ans-txt">${esc(localQ.a)}</div>
+      </div>` : ''}
     </div>` : ''}
 
     <!-- Scoreboard -->
