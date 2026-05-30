@@ -148,6 +148,18 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .admin-saved { font-size:11px; color:var(--green); font-weight:700; opacity:0; transition:opacity .25s; }
 .admin-saved.show { opacity:1; }
 .admin-footer { padding:10px 24px; border-top:1px solid rgba(255,255,255,.06); font-size:11px; color:rgba(255,255,255,.28); flex-shrink:0; }
+.admin-diff-btns { display:flex; gap:6px; margin-top:4px; }
+.admin-diff-btn { padding:3px 12px; border-radius:6px; border:1px solid rgba(255,255,255,.12); background:transparent; color:rgba(255,255,255,.4); font-size:11px; cursor:pointer; transition:all .12s; }
+.admin-diff-btn:hover { border-color:rgba(255,255,255,.3); color:rgba(255,255,255,.7); }
+.admin-diff-btn.active { font-weight:700; }
+.admin-del-btn { padding:2px 6px; border:none; background:transparent; color:rgba(255,82,82,.4); cursor:pointer; font-size:13px; flex-shrink:0; border-radius:3px; line-height:1; }
+.admin-del-btn:hover { color:var(--red); background:rgba(255,82,82,.1); }
+.admin-add-round-btn { display:block; width:100%; text-align:left; padding:10px 16px; border:none; border-top:1px solid rgba(255,255,255,.06); background:transparent; color:rgba(0,200,255,.55); font-size:12px; cursor:pointer; transition:color .12s,background .12s; }
+.admin-add-round-btn:hover { color:var(--cyan); background:rgba(0,200,255,.06); }
+.admin-rname-row { display:flex; gap:8px; align-items:center; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.07); }
+.admin-rname-input { flex:1; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.15); border-radius:5px; color:#fff; font-size:14px; font-weight:700; padding:7px 11px; font-family:inherit; }
+.admin-rname-input:focus { outline:none; border-color:rgba(0,200,255,.4); }
+.tc-captain-lbl { font-size:9px; background:rgba(255,215,0,.12); color:var(--gold); padding:1px 5px; border-radius:3px; letter-spacing:.5px; margin-left:4px; }
 
 /* ── Host sidebar ── */
 .hp { padding:11px 14px; border-bottom:1px solid rgba(255,255,255,.05); flex-shrink:0; }
@@ -391,11 +403,16 @@ function openAdmin() {
 function closeAdmin() { document.getElementById('admin').classList.add('hidden'); }
 
 function renderAdminSidebar() {
-  document.getElementById('admin-sidebar').innerHTML = ROUNDS.map((r, i) => `
-    <button class="admin-round-btn ${i===adminRound?'active':''}"
-      onclick="selectAdminRound(${i})" style="${i===adminRound?'':''}">
-      <span style="font-size:10px;opacity:.5;">R${i+1}</span> ${r.name}
-    </button>`).join('');
+  document.getElementById('admin-sidebar').innerHTML =
+    ROUNDS.map((r, i) => `
+      <div style="display:flex;align-items:center;">
+        <button class="admin-round-btn ${i===adminRound?'active':''}" style="flex:1;min-width:0;"
+          onclick="selectAdminRound(${i})">
+          <span style="font-size:10px;opacity:.5;">R${i+1}</span> ${esc(r.name)}
+        </button>
+        <button class="admin-del-btn" onclick="deleteRound(${i})" title="Delete round">✕</button>
+      </div>`).join('') +
+    `<button class="admin-add-round-btn" onclick="addRound()">＋ Add Round</button>`;
 }
 
 function selectAdminRound(idx) {
@@ -405,24 +422,40 @@ function selectAdminRound(idx) {
 }
 
 function renderAdminQuestions() {
-  const round = ROUNDS[adminRound];
-  const isNTT = adminRound === 2;
-  document.getElementById('admin-questions').innerHTML = round.questions.map((q, qi) => `
-    <div class="admin-q-card">
-      <div class="admin-q-hdr">
-        <span class="admin-q-num">Q${qi+1}</span>
-        <span class="admin-diff" style="background:${DIFF_BG[q.d]};color:${DIFF_COLOR[q.d].replace('.5)','.9)')}">${DIFF_LABEL[q.d]}</span>
-        ${isNTT ? '<span style="font-size:10px;color:var(--dim);opacity:.6;">Host plays clip</span>' : ''}
-      </div>
-      <div class="admin-field-lbl">Question</div>
-      <textarea class="admin-ta" id="aq-q-${adminRound}-${qi}" rows="3">${escAttr(q.q)}</textarea>
-      <div class="admin-field-lbl">Answer</div>
-      <textarea class="admin-ta" id="aq-a-${adminRound}-${qi}" rows="2">${escAttr(q.a)}</textarea>
-      <div class="admin-save-row">
-        <button class="btn-admin-save" onclick="saveAdminQ(${adminRound},${qi})">Save</button>
-        <span class="admin-saved" id="aq-msg-${adminRound}-${qi}">✓ Saved</span>
-      </div>
-    </div>`).join('');
+  const ri = adminRound;
+  const round = ROUNDS[ri];
+  if (!round) return;
+  document.getElementById('admin-questions').innerHTML =
+    `<div class="admin-rname-row">
+       <input class="admin-rname-input" id="aq-rname" type="text" value="${escAttr(round.name)}" placeholder="Round name">
+       <button class="btn-admin-save" onclick="saveRoundName(${ri})">Rename</button>
+     </div>` +
+    round.questions.map((q, qi) => `
+      <div class="admin-q-card">
+        <div class="admin-q-hdr">
+          <span class="admin-q-num">Q${qi+1}</span>
+        </div>
+        <div class="admin-field-lbl">Difficulty</div>
+        <div class="admin-diff-btns" id="aq-d-${ri}-${qi}">
+          ${[1,2,3].map(d=>`<button class="admin-diff-btn${q.d===d?' active':''}" data-d="${d}"
+            style="${q.d===d?'background:'+DIFF_BG[d]+';color:'+DIFF_COLOR[d].replace('.5)','.9)')+';border-color:'+DIFF_COLOR[d].replace('.5)','.4)'):''};"
+            onclick="setDiff(${ri},${qi},${d})">${DIFF_LABEL[d]}</button>`).join('')}
+        </div>
+        <div class="admin-field-lbl">Question</div>
+        <textarea class="admin-ta" id="aq-q-${ri}-${qi}" rows="3">${escAttr(q.q)}</textarea>
+        <div class="admin-field-lbl">Answer</div>
+        <textarea class="admin-ta" id="aq-a-${ri}-${qi}" rows="2">${escAttr(q.a)}</textarea>
+        <div class="admin-save-row">
+          <button class="btn-admin-save" onclick="saveAdminQ(${ri},${qi})">Save</button>
+          <span class="admin-saved" id="aq-msg-${ri}-${qi}">✓ Saved</span>
+        </div>
+      </div>`).join('') +
+    `<button onclick="addQuestion(${ri})"
+       style="width:100%;padding:10px;border:1px dashed rgba(255,255,255,.15);border-radius:6px;background:transparent;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;margin-top:4px;"
+       onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'"
+       onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.35)'">
+      ＋ Add Question
+    </button>`;
 }
 
 function saveAdminQ(ri, qi) {
@@ -431,11 +464,64 @@ function saveAdminQ(ri, qi) {
   if (!qEl || !aEl) return;
   const newQ = qEl.value;
   const newA = aEl.value;
+  const newD = ROUNDS[ri].questions[qi].d;
   ROUNDS[ri].questions[qi].q = newQ;
   ROUNDS[ri].questions[qi].a = newA;
-  emit('host:editQuestion', { roundIdx: ri, qIdx: qi, q: newQ, a: newA });
+  emit('host:editQuestion', { roundIdx: ri, qIdx: qi, q: newQ, a: newA, d: newD });
   const msg = document.getElementById(`aq-msg-${ri}-${qi}`);
   if (msg) { msg.classList.add('show'); setTimeout(() => msg.classList.remove('show'), 1500); }
+}
+
+function setDiff(ri, qi, d) {
+  ROUNDS[ri].questions[qi].d = d;
+  const container = document.getElementById(`aq-d-${ri}-${qi}`);
+  if (!container) return;
+  container.querySelectorAll('.admin-diff-btn').forEach(btn => {
+    const bd = parseInt(btn.dataset.d);
+    const on = bd === d;
+    btn.classList.toggle('active', on);
+    btn.style.background    = on ? DIFF_BG[d]    : '';
+    btn.style.color         = on ? DIFF_COLOR[d].replace('.5)','.9)') : '';
+    btn.style.borderColor   = on ? DIFF_COLOR[d].replace('.5)','.4)') : '';
+  });
+}
+
+function saveRoundName(ri) {
+  const input = document.getElementById('aq-rname');
+  if (!input) return;
+  const name = input.value.trim() || ROUNDS[ri].name;
+  ROUNDS[ri].name = name;
+  emit('host:renameRound', { roundIdx: ri, name });
+  renderAdminSidebar();
+}
+
+function addRound() {
+  const newRound = {
+    name: 'New Round',
+    color: '#00C8FF',
+    note: '',
+    questions: Array.from({length:5}, (_,i) => ({ q: `Question ${i+1}`, a: `Answer ${i+1}`, d: 2 }))
+  };
+  ROUNDS.push(newRound);
+  adminRound = ROUNDS.length - 1;
+  emit('host:addRound', newRound);
+  renderAdminSidebar();
+  renderAdminQuestions();
+}
+
+function deleteRound(idx) {
+  if (ROUNDS.length <= 1) { alert('Must keep at least one round.'); return; }
+  if (!confirm(`Delete "${ROUNDS[idx].name}"? This cannot be undone.`)) return;
+  ROUNDS.splice(idx, 1);
+  if (adminRound >= ROUNDS.length) adminRound = ROUNDS.length - 1;
+  emit('host:deleteRound', idx);
+  renderAdminSidebar();
+  renderAdminQuestions();
+}
+
+function addQuestion(ri) {
+  ROUNDS[ri].questions.push({ q: 'New question', a: 'Answer', d: 2 });
+  renderAdminQuestions();
 }
 
 // ── Scoreboard ────────────────────────────────────────────────────────────────
@@ -517,9 +603,9 @@ function renderSetup() {
                 ${EMOJI_PRESETS.map(e=>`<button class="ep" onclick="pickEmoji(${i},'${e}')">${e}</button>`).join('')}
               </div>
             </div>
-            <div class="tc-lbl">Team Members</div>
+            <div class="tc-lbl">Team Members <span class="tc-captain-lbl">★ CAPTAIN</span></div>
             <div class="tc-mems">
-              ${[0,1,2,3,4].map(m=>`<input id="tm-${i}-${m}" type="text" placeholder="Member ${m+1}" maxlength="30"/>`).join('')}
+              ${[0,1,2,3,4].map(m=>`<input id="tm-${i}-${m}" type="text" placeholder="${m===0?'Team Captain (submits answers)':'Member '+(m+1)}" maxlength="30"/>`).join('')}
             </div>
           </div>
         </div>`).join('')}

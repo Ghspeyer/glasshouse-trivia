@@ -77,6 +77,7 @@
 
   /* ── GAME VIEW ────────────────────────────────────────────────── */
   #gameView { display: none; flex-direction: column; min-height: 100vh; }
+  .play-body { flex: 1; display: flex; max-width: 820px; margin: 0 auto; width: 100%; }
 
   /* Header */
   .play-header {
@@ -117,8 +118,71 @@
   .play-main {
     flex: 1; display: flex; flex-direction: column;
     padding: 20px 16px 280px; gap: 16px;
-    max-width: 600px; margin: 0 auto; width: 100%;
+    min-width: 0;
   }
+
+  /* Standings sidebar — hidden on mobile, visible on wider screens */
+  .standings-panel { display: none; }
+  @media (min-width: 700px) {
+    .standings-panel {
+      display: block; width: 190px; flex-shrink: 0;
+      padding: 20px 0 280px 16px; overflow-y: auto;
+    }
+  }
+  .standings-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; position: sticky; top: 20px;
+  }
+  .standings-hdr {
+    padding: 10px 14px 8px; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--cyan); font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  .standings-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .standings-row:last-child { border-bottom: none; }
+  .standings-row.is-my-team { background: rgba(255,255,255,0.05); }
+  .standings-rank { font-size: 15px; width: 22px; flex-shrink: 0; text-align: center; }
+  .standings-name { flex: 1; font-weight: 600; color: #fff; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .standings-pts  { font-weight: 800; font-size: 15px; flex-shrink: 0; }
+
+  /* Auto-assign button */
+  .auto-assign-btn {
+    width: 100%; max-width: 420px; padding: 13px;
+    background: var(--cyan); color: var(--navy2);
+    border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 800; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s, transform .1s;
+  }
+  .auto-assign-btn:active { transform: scale(0.98); }
+  .auto-assign-note { font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; max-width: 420px; margin-top: 8px; }
+  .team-btn.is-my-team { border-width: 2.5px !important; }
+  .my-team-badge {
+    display: inline-block; margin-top: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    color: var(--green); background: rgba(0,230,118,0.15);
+    padding: 2px 8px; border-radius: 8px;
+  }
+
+  /* Captain / suggestion UI */
+  .answer-label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .captain-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    color: var(--gold); background: rgba(255,215,0,0.12);
+    padding: 2px 8px; border-radius: 8px;
+  }
+  .suggest-btn {
+    margin-top: 12px; width: 100%;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.75); border-radius: 12px;
+    font-size: 15px; font-weight: 700; padding: 13px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; transition: background .15s;
+  }
+  .suggest-btn:active { background: rgba(255,255,255,0.13); }
 
   /* Round badge */
   .round-badge {
@@ -433,7 +497,10 @@
       <button class="change-team-btn" id="changeTeamBtn">Change</button>
     </div>
 
-    <div class="play-main" id="mainContent"></div>
+    <div class="play-body">
+      <div class="play-main" id="mainContent"></div>
+      <div class="standings-panel" id="standingsPanel"></div>
+    </div>
 
   </div>
 </div>
@@ -479,19 +546,40 @@
   function playBuzzer() {
     try {
       const ctx = getAudio();
-      // Two-tone buzz: a harsh low rumble that fades
-      [150, 120].forEach((freq, idx) => {
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(freq * 0.7, ctx.currentTime + 0.9);
-        gain.gain.setValueAtTime(0.35 - idx * 0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
-        osc.start(ctx.currentTime + idx * 0.05);
-        osc.stop(ctx.currentTime + 0.95);
-      });
+      const t0 = ctx.currentTime;
+
+      // Transient click — the "thwack" at the front of a real buzzer
+      const noiseLen = Math.floor(ctx.sampleRate * 0.022);
+      const nBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+      const nd = nBuf.getChannelData(0);
+      for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / noiseLen);
+      const nSrc = ctx.createBufferSource();
+      nSrc.buffer = nBuf;
+      const nGain = ctx.createGain();
+      nGain.gain.value = 0.85;
+      nSrc.connect(nGain); nGain.connect(ctx.destination);
+      nSrc.start(t0); nSrc.stop(t0 + 0.025);
+
+      // Square-wave buzz with descending pitch — classic game-show sound
+      const osc = ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(155, t0);
+      osc.frequency.linearRampToValueAtTime(100, t0 + 0.62);
+
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0, t0);
+      env.gain.linearRampToValueAtTime(0.72, t0 + 0.012); // fast attack
+      env.gain.setValueAtTime(0.68, t0 + 0.55);
+      env.gain.linearRampToValueAtTime(0, t0 + 0.68);     // hard cutoff
+
+      // Low-pass to remove ear-splitting upper harmonics
+      const lpf = ctx.createBiquadFilter();
+      lpf.type = 'lowpass';
+      lpf.frequency.value = 700;
+      lpf.Q.value = 0.4;
+
+      osc.connect(lpf); lpf.connect(env); env.connect(ctx.destination);
+      osc.start(t0 + 0.005); osc.stop(t0 + 0.72);
     } catch(e) {}
   }
 
@@ -570,21 +658,43 @@
       return;
     }
     $teamGrid.innerHTML = '';
+    const autoIdx = findTeamByName(playerName);
+
+    // Auto-join banner when name matches a team
+    if (autoIdx !== null) {
+      const autoTeam = state.teams[autoIdx];
+      const banner = document.createElement('div');
+      banner.style.cssText = 'grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:8px;';
+      const joinBtn = document.createElement('button');
+      joinBtn.className = 'auto-assign-btn';
+      joinBtn.textContent = `✓ Join ${autoTeam.name}${autoTeam.emoji ? ' ' + autoTeam.emoji : ''}`;
+      joinBtn.addEventListener('click', () => {
+        unlockAudio(); teamIdx = autoIdx; saveTeam(autoIdx); showGame();
+      });
+      const note = document.createElement('p');
+      note.className = 'auto-assign-note';
+      note.textContent = 'Your name matches this team — or pick any team below';
+      banner.appendChild(joinBtn);
+      banner.appendChild(note);
+      $teamGrid.appendChild(banner);
+    }
+
     state.teams.forEach((team, i) => {
+      const isMyTeam = autoIdx === i;
       const btn = document.createElement('button');
-      btn.className = 'team-btn';
+      btn.className = 'team-btn' + (isMyTeam ? ' is-my-team' : '');
       btn.style.borderColor = team.color;
-      btn.style.boxShadow = `0 0 16px ${team.color}22`;
+      btn.style.boxShadow = isMyTeam ? `0 0 22px ${team.color}55` : `0 0 16px ${team.color}22`;
       const members = team.members && team.members.length ? team.members.join(', ') : '';
       btn.innerHTML = `
         ${team.emoji ? `<div class="t-emoji">${team.emoji}</div>` : ''}
         <div class="t-color-bar" style="background:${team.color}"></div>
         <div class="t-name">${esc(team.name)}</div>
         ${members ? `<div class="t-members">${esc(members)}</div>` : ''}
+        ${isMyTeam ? '<div class="my-team-badge">Your Team ✓</div>' : ''}
       `;
       btn.addEventListener('click', () => {
-        unlockAudio();
-        teamIdx = i; saveTeam(i); showGame();
+        unlockAudio(); teamIdx = i; saveTeam(i); showGame();
       });
       $teamGrid.appendChild(btn);
     });
@@ -657,17 +767,54 @@
     $chatInput.value = '';
   }
 
+  // ── Standings ─────────────────────────────────────────────────────
+  function renderStandings() {
+    const panel = document.getElementById('standingsPanel');
+    if (!panel) return;
+    if (!state || !state.teams || state.teams.length === 0 || state.phase === 'setup') {
+      panel.innerHTML = ''; return;
+    }
+    const sorted = [...state.teams].map((t, i) => ({ ...t, _i: i })).sort((a, b) => b.score - a.score);
+    const medals = ['🥇','🥈','🥉'];
+    panel.innerHTML = `<div class="standings-card">
+      <div class="standings-hdr">📊 Standings</div>
+      ${sorted.map((t, rank) => `
+        <div class="standings-row${t._i === teamIdx ? ' is-my-team' : ''}">
+          <span class="standings-rank">${medals[rank] || (rank + 1)}</span>
+          <span class="standings-name">${t.emoji ? t.emoji + ' ' : ''}${esc(t.name)}</span>
+          <span class="standings-pts" style="color:${t.color}">${t.score}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  // ── Captain / leader check ────────────────────────────────────────
+  function isCaptain() {
+    if (!state || teamIdx === null) return true;
+    const t = state.teams[teamIdx];
+    if (!t || !t.members || !t.members[0]) return true; // no captain set → everyone submits
+    if (!playerName) return false;
+    return playerName.toLowerCase() === t.members[0].toLowerCase();
+  }
+
+  // ── Auto-assign by name ───────────────────────────────────────────
+  function findTeamByName(name) {
+    if (!state || !state.teams || !name) return null;
+    const lower = name.toLowerCase();
+    for (let i = 0; i < state.teams.length; i++) {
+      if ((state.teams[i].members || []).some(m => m.toLowerCase() === lower)) return i;
+    }
+    return null;
+  }
+
   // ── Main render ──────────────────────────────────────────────────
   function render() {
     if (!state || teamIdx === null) return;
-
     if (state.phase === 'setup') {
       $main.innerHTML = waitingHTML('⏳', 'Game Starting Soon', 'The host is setting things up. Hang tight!');
-      return;
-    }
-    if (state.phase === 'final') { renderFinal(); return; }
-    if (state.phase === 'ri')    { renderRoundIntro(); return; }
-    if (state.phase === 'q')     { renderQuestion(); return; }
+    } else if (state.phase === 'final') { renderFinal(); }
+    else if (state.phase === 'ri')      { renderRoundIntro(); }
+    else if (state.phase === 'q')       { renderQuestion(); }
+    renderStandings();
   }
 
   function waitingHTML(icon, title, sub) {
@@ -703,10 +850,10 @@
     const diff = state.qDiff;
     const diffCls = diff === 1 ? 'diff-1' : diff === 2 ? 'diff-2' : 'diff-3';
 
-    const myAns    = state.answers && state.answers[teamIdx] ? state.answers[teamIdx] : null;
-    const myResult = state.results  && state.results[teamIdx]  ? state.results[teamIdx]  : null;
-    const submitted  = myAns && myAns.submitted;
-    const answerText = myAns ? myAns.answer : '';
+    const myAns    = state.answers?.[teamIdx] || null;
+    const myResult = state.results?.[teamIdx]  || null;
+    const submitted  = myAns?.submitted || false;
+    const answerText = myAns?.answer   || '';
 
     const revealHTML = state.aText
       ? `<div class="answer-reveal">
@@ -716,70 +863,85 @@
       : '';
 
     let resultHTML = '';
-    if (myResult === 'correct') {
-      resultHTML = `<div class="result-banner correct">✓ Correct! +1 point</div>`;
-    } else if (myResult === 'wrong') {
-      resultHTML = `<div class="result-banner wrong">✗ Not this time</div>`;
-    }
+    if (myResult === 'correct') resultHTML = `<div class="result-banner correct">✓ Correct! +1 point</div>`;
+    else if (myResult === 'wrong') resultHTML = `<div class="result-banner wrong">✗ Not this time</div>`;
+
+    const captain    = state.teams[teamIdx]?.members?.[0] || '';
+    const amCaptain  = isCaptain();
+
+    const answerSection = amCaptain
+      ? `<div class="answer-card">
+           <div class="answer-label-row">
+             <div class="answer-label">Your Answer</div>
+             ${captain ? `<span class="captain-badge">★ Captain</span>` : ''}
+           </div>
+           <textarea class="answer-input" id="answerInput"
+             placeholder="Type your team's answer…" rows="3"
+             ${myResult ? 'disabled' : ''}>${esc(answerText)}</textarea>
+           <button class="submit-btn${submitted ? ' submitted' : ''}" id="submitBtn">
+             ${submitted ? '✓ Answer Submitted' : 'Submit Answer'}
+           </button>
+           <div class="submit-status" id="submitStatus"></div>
+         </div>`
+      : `<div class="answer-card">
+           <div class="answer-label-row">
+             <div class="answer-label">Suggest an Answer</div>
+             <span class="captain-badge" style="color:var(--cyan);background:rgba(0,200,255,0.1);">
+               ${esc(captain)} submits
+             </span>
+           </div>
+           <textarea class="answer-input" id="suggestInput"
+             placeholder="Suggest to ${esc(captain)}…" rows="2"></textarea>
+           <button class="suggest-btn" id="suggestBtn">💡 Send Suggestion to Chat</button>
+           <div class="submit-status" id="suggestStatus"></div>
+         </div>`;
 
     $main.innerHTML = `
       <div class="round-badge">
         <div class="round-badge-dot" style="background:${color}"></div>
         ${esc(state.roundName)} &nbsp;·&nbsp; Q${state.qIdx + 1} of ${state.qTotal}
       </div>
-
       <div class="q-card">
         <div class="q-num">Question ${state.qIdx + 1}</div>
         <div class="q-text">${esc(state.qText)}</div>
         ${diff ? `<span class="q-diff ${diffCls}">${diffLabels[diff] || ''}</span>` : ''}
       </div>
-
       ${revealHTML}
       ${resultHTML}
-
-      <div class="answer-card">
-        <div class="answer-label">Your Answer</div>
-        <textarea
-          class="answer-input"
-          id="answerInput"
-          placeholder="Type your team's answer…"
-          rows="3"
-          ${myResult ? 'disabled' : ''}
-        >${esc(answerText)}</textarea>
-        <button class="submit-btn${submitted ? ' submitted' : ''}" id="submitBtn">
-          ${submitted ? '✓ Answer Submitted' : 'Submit Answer'}
-        </button>
-        <div class="submit-status" id="submitStatus"></div>
-      </div>
-
+      ${answerSection}
       ${scoreStripHTML()}
     `;
 
-    const $input  = document.getElementById('answerInput');
-    const $btn    = document.getElementById('submitBtn');
-    const $status = document.getElementById('submitStatus');
-
-    $btn.addEventListener('click', () => {
-      const answer = $input.value.trim();
-      if (!answer) {
-        $status.className = 'submit-status err';
-        $status.textContent = 'Please type an answer first.';
-        return;
-      }
-      socket.emit('play:answer', { round: state.round, qIdx: state.qIdx, teamIdx, answer });
-      $btn.classList.add('submitted');
-      $btn.textContent = '✓ Answer Submitted';
-      $status.className = 'submit-status ok';
-      $status.textContent = 'Submitted! You can update until the next question.';
-    });
-
-    $input.addEventListener('input', () => {
-      if ($input.value.trim()) {
-        $btn.classList.remove('submitted');
-        $btn.textContent = 'Submit Answer';
-        $status.textContent = '';
-      }
-    });
+    if (amCaptain) {
+      const $input  = document.getElementById('answerInput');
+      const $btn    = document.getElementById('submitBtn');
+      const $status = document.getElementById('submitStatus');
+      $btn.addEventListener('click', () => {
+        const answer = $input.value.trim();
+        if (!answer) { $status.className='submit-status err'; $status.textContent='Please type an answer first.'; return; }
+        socket.emit('play:answer', { round: state.round, qIdx: state.qIdx, teamIdx, answer });
+        $btn.classList.add('submitted'); $btn.textContent = '✓ Answer Submitted';
+        $status.className = 'submit-status ok';
+        $status.textContent = 'Submitted! You can update until the next question.';
+      });
+      $input.addEventListener('input', () => {
+        if ($input.value.trim()) { $btn.classList.remove('submitted'); $btn.textContent = 'Submit Answer'; $status.textContent = ''; }
+      });
+    } else {
+      const $sug    = document.getElementById('suggestInput');
+      const $sBtn   = document.getElementById('suggestBtn');
+      const $sStat  = document.getElementById('suggestStatus');
+      $sBtn.addEventListener('click', () => {
+        const sug = $sug.value.trim();
+        if (!sug) return;
+        socket.emit('chat:send', { teamIdx, name: playerName || 'Teammate', msg: '💡 ' + sug });
+        $sug.value = '';
+        $sStat.className = 'submit-status ok';
+        $sStat.textContent = 'Suggestion sent to chat!';
+        setTimeout(() => { $sStat.textContent = ''; }, 2000);
+      });
+      $sug.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $sBtn.click(); } });
+    }
   }
 
   function renderFinal() {
@@ -883,6 +1045,8 @@
   $nameIn.addEventListener('input', () => {
     playerName = $nameIn.value.trim();
     localStorage.setItem('gh_name', playerName);
+    // Live-update team grid so matching team highlights immediately
+    if ($teamSelect.style.display !== 'none') renderTeamSelect();
   });
 
   // ── Init ─────────────────────────────────────────────────────────

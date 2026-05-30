@@ -270,7 +270,11 @@ io.on('connection', socket => {
   socket.on('host:next',   doNext);
   socket.on('host:prev',   doPrev);
 
-  socket.on('host:reveal', () => { G.answerShown = !G.answerShown; bcast(); });
+  socket.on('host:reveal', () => {
+    G.answerShown = !G.answerShown;
+    if (G.answerShown) stopTimer(); // freeze timer the moment answer is shown
+    bcast();
+  });
 
   socket.on('host:score', ({ teamIdx, delta }) => {
     if (!G.teams[teamIdx]) return;
@@ -288,15 +292,36 @@ io.on('connection', socket => {
     else if (action === 'reset') resetTimer();
   });
 
-  socket.on('host:editQuestion', ({ roundIdx, qIdx, q, a }) => {
+  socket.on('host:editQuestion', ({ roundIdx, qIdx, q, a, d }) => {
     if (ROUNDS[roundIdx] && ROUNDS[roundIdx].questions[qIdx]) {
       ROUNDS[roundIdx].questions[qIdx].q = q;
       ROUNDS[roundIdx].questions[qIdx].a = a;
-      // Re-broadcast if this is the currently active question
-      if (G.phase === 'q' && G.round === roundIdx && G.qIdx === qIdx) {
-        bcast();
-      }
+      if (typeof d === 'number' && [1,2,3].includes(d)) ROUNDS[roundIdx].questions[qIdx].d = d;
+      if (G.phase === 'q' && G.round === roundIdx && G.qIdx === qIdx) bcast();
     }
+  });
+
+  socket.on('host:addRound', (round) => {
+    ROUNDS.push({
+      name:      round.name      || 'New Round',
+      color:     round.color     || '#00C8FF',
+      note:      round.note      || '',
+      questions: (round.questions || []).map(q => ({
+        q: q.q || '', a: q.a || '', d: q.d || 2
+      }))
+    });
+    bcast();
+  });
+
+  socket.on('host:deleteRound', (idx) => {
+    if (ROUNDS.length <= 1 || idx < 0 || idx >= ROUNDS.length) return;
+    ROUNDS.splice(idx, 1);
+    if (G.round >= ROUNDS.length) { G.round = ROUNDS.length - 1; G.qIdx = -1; G.phase = 'ri'; }
+    bcast();
+  });
+
+  socket.on('host:renameRound', ({ roundIdx, name }) => {
+    if (ROUNDS[roundIdx]) { ROUNDS[roundIdx].name = name; bcast(); }
   });
 
   socket.on('chat:join', (idx) => {
