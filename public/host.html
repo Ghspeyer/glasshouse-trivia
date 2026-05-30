@@ -6,14 +6,14 @@
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
-  --nav:   #08121F; --nav2: #0D1E30; --nav3: #112236;
-  --cyan:  #00C8FF; --cglow: rgba(0,200,255,0.2);
-  --white: #FFFFFF; --dim:   #7AAABB; --dim2: #3A5060;
+  --nav:   #0A1218; --nav2: #0E1C28; --nav3: #122030;
+  --cyan:  #F47820; --cglow: rgba(244,120,32,0.22);
+  --white: #FFFFFF; --dim:   #B08060; --dim2: #4A3828;
   --gold:  #FFD700; --green: #00E676; --red: #FF5252;
-  --orange:#FFB74D;
+  --orange:#F47820;
 }
 body { font-family:'Segoe UI',Calibri,Arial,sans-serif; background:var(--nav); color:var(--white); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,200,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.05) 1px,transparent 1px); background-size:38px 38px; pointer-events:none; z-index:0; }
+body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(244,120,32,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(244,120,32,.04) 1px,transparent 1px); background-size:38px 38px; pointer-events:none; z-index:0; }
 
 /* ── Header ── */
 #hdr { display:flex; align-items:center; justify-content:space-between; padding:0 14px; height:52px; background:rgba(8,18,31,.97); border-bottom:2px solid var(--cyan); flex-shrink:0; position:relative; z-index:10; gap:8px; }
@@ -34,8 +34,7 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 /* ── Layout ── */
 #main { display:flex; flex:1; overflow:hidden; position:relative; z-index:1; }
 #display { flex:1; display:flex; align-items:center; justify-content:center; padding:14px; overflow:hidden; min-width:0; }
-#host { width:400px; flex-shrink:0; border-left:1px solid rgba(0,200,255,.15); background:rgba(8,18,31,.92); overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; transition:width .3s, opacity .3s; }
-#host.proj { width:0; opacity:0; overflow:hidden; }
+#host { width:400px; flex-shrink:0; border-left:1px solid rgba(244,120,32,.15); background:rgba(10,18,24,.92); overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; }
 
 /* ── Slide ── */
 .slide { width:100%; height:100%; border-radius:8px; position:relative; display:flex; flex-direction:column; box-shadow:0 0 60px rgba(0,200,255,.08),0 0 0 1px rgba(0,200,255,.12); overflow:hidden; background:var(--nav2); }
@@ -186,6 +185,11 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .lobby-remove-btn { width:20px; height:20px; border:none; background:transparent; color:rgba(255,82,82,.4); font-size:11px; cursor:pointer; padding:0; border-radius:3px; flex-shrink:0; line-height:1; }
 .lobby-remove-btn:hover { color:var(--red); background:rgba(255,82,82,.08); }
 .lobby-empty-team { font-size:11px; color:var(--dim2); font-style:italic; padding:4px 0; }
+.lobby-team-edit { display:flex; gap:5px; align-items:center; margin-bottom:6px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,.07); }
+.lobby-team-name-input { flex:1; min-width:0; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.15); color:var(--white); font-family:'Arial Black',Arial,sans-serif; font-size:12px; padding:2px 4px; outline:none; }
+.lobby-team-name-input:focus { border-bottom-color:var(--cyan); }
+.lobby-team-emoji-input { width:30px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:3px; color:var(--white); font-size:16px; text-align:center; padding:1px 2px; outline:none; }
+.lobby-team-emoji-input:focus { border-color:rgba(255,255,255,.3); }
 
 /* ── Host sidebar ── */
 .hp { padding:11px 14px; border-bottom:1px solid rgba(255,255,255,.05); flex-shrink:0; }
@@ -248,7 +252,6 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
   <div id="score-bar"></div>
   <div class="hdr-r">
     <button class="btn-hdr" onclick="openAdmin()">✏️ Questions</button>
-    <button class="btn-hdr" id="btn-proj" onclick="toggleProj()">⊞ Projector</button>
     <button class="btn-hdr" onclick="emit('host:scoreboard')">★ Scores</button>
     <button class="btn-hdr danger" id="btn-restart" onclick="confirmRestart()">↺ Restart</button>
   </div>
@@ -357,7 +360,7 @@ const DIFF_LABEL = {1:'Easy',2:'Medium',3:'Hard'};
 const DIFF_COLOR = {1:'rgba(0,230,118,.5)',2:'rgba(255,183,77,.5)',3:'rgba(255,82,82,.5)'};
 const DIFF_BG    = {1:'rgba(0,230,118,.18)',2:'rgba(255,183,77,.18)',3:'rgba(255,82,82,.18)'};
 const TEAM_COLORS = ['#00C8FF','#FF6B6B','#FFD700','#00E676'];
-const EMOJI_PRESETS = ['🦁','🐯','🦊','🦅','🐺','🐻','🦈','🦋','🐉','🦄','🍺','🎯'];
+const EMOJI_PRESETS = ['🐆','🦁','🐯','🦊','🦅','🐺','🐻','🦈','🦋','🐉','🦄','🎯'];
 
 // ── Socket ────────────────────────────────────────────────────────────────────
 const socket = io();
@@ -381,20 +384,9 @@ document.addEventListener('keydown', e => {
     case 't': case 'T':         emit('host:timer',{action: T.running?'stop':'start'}); break;
     case 'r': case 'R':         emit('host:timer',{action:'reset'}); break;
     case 's': case 'S':         emit('host:scoreboard'); break;
-    case 'p': case 'P':         toggleProj(); break;
     case 'Escape':              closeSb(); closeAdmin(); break;
   }
 });
-
-// ── Projector mode ────────────────────────────────────────────────────────────
-let projOn = false;
-function toggleProj() {
-  projOn = !projOn;
-  document.getElementById('host').classList.toggle('proj', projOn);
-  const b = document.getElementById('btn-proj');
-  b.textContent = projOn ? '⊞ Exit Projector' : '⊞ Projector';
-  b.classList.toggle('on', projOn);
-}
 
 // ── Restart ───────────────────────────────────────────────────────────────────
 let restartTimer = null;
@@ -738,23 +730,25 @@ function renderHost() {
 
     <div class="hp">
       <div class="hp-lbl">Now Playing</div>
-      <div class="pos-txt" style="color:${col}">Round ${S.roundNum}${isQ?', Q'+(S.qIdx+1):' — Intro'}</div>
-      <div class="pos-sub">${esc(S.roundName)}</div>
-    </div>
-
-    ${isQ ? `<div class="hp">
-      <div class="hp-lbl">Timer</div>
-      <div id="timer-val">${T.sec}</div>
-      <div class="timer-row">
-        <button class="btn-t ${T.running?'on':''}" id="btn-tt"
-          onclick="emit('host:timer',{action:'${T.running?'stop':'start'}'})">
-          ${T.running?'⏸ Pause':'▶ Start'}
-        </button>
-        <button class="btn-t" onclick="emit('host:timer',{action:'reset'})">↺ Reset</button>
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div class="pos-txt" style="color:${col}">Round ${S.roundNum}${isQ?', Q'+(S.qIdx+1):' — Intro'}</div>
+          <div class="pos-sub">${esc(S.roundName)}</div>
+        </div>
+        ${isQ ? `<div style="flex-shrink:0;text-align:right;">
+          <div id="timer-val" style="font-size:38px;">${T.sec}</div>
+          <div class="timer-row" style="gap:4px;margin-top:3px;">
+            <button class="btn-t ${T.running?'on':''}" id="btn-tt" style="padding:4px 7px;"
+              onclick="emit('host:timer',{action:'${T.running?'stop':'start'}'})">
+              ${T.running?'⏸':'▶'}
+            </button>
+            <button class="btn-t" style="padding:4px 7px;" onclick="emit('host:timer',{action:'reset'})">↺</button>
+          </div>
+        </div>` : ''}
       </div>
     </div>
 
-    <div class="hp">
+    ${isQ ? `<div class="hp">
       <div class="hp-lbl">
         Team Answers
         ${S.answerShown?'':' <span style="opacity:.4;font-size:9px;">— hidden until you reveal</span>'}
@@ -791,22 +785,18 @@ function renderHost() {
           </div>`:''}
         </div>`;
       }).join('')}
-      ${localQ && S.answerShown?`<div class="host-ans-box" style="margin-top:10px;">
+      ${localQ && S.answerShown?`<div class="host-ans-box" style="margin-top:8px;">
         <div class="host-ans-lbl">✓ Correct Answer</div>
         <div class="host-ans-txt">${esc(localQ.a)}</div>
       </div>`:''}
     </div>` : ''}
 
     <div class="hp">
-      <button class="btn-sb-trigger" onclick="emit('host:scoreboard')">★ Toggle Scoreboard</button>
-    </div>
-
-    <div class="hp">
       <div class="hp-lbl">Shortcuts</div>
       <div class="keys">
         <b>Space / →</b> Next &nbsp; <b>←</b> Prev<br>
-        <b>A</b> Reveal &nbsp; <b>T</b> Timer &nbsp; <b>R</b> Reset timer<br>
-        <b>S</b> Scoreboard &nbsp; <b>P</b> Projector &nbsp; <b>Esc</b> Close
+        <b>A</b> Reveal &nbsp; <b>T</b> Timer &nbsp; <b>R</b> Reset<br>
+        <b>S</b> Scoreboard &nbsp; <b>Esc</b> Close
       </div>
     </div>
   `;
@@ -856,16 +846,26 @@ function renderLobby() {
       ${teams.map((t, i) => {
         const tp = players.filter(p => p.teamIdx === i);
         return `<div class="lobby-team-col" style="border-color:${t.color}44;">
-          <div class="lobby-team-hdr" style="color:${t.color}">
-            ${t.emoji || ''} ${esc(t.name)} <span style="opacity:.5;font-weight:normal;">(${tp.length})</span>
+          <div class="lobby-team-edit">
+            <input class="lobby-team-emoji-input" id="lt-emoji-${i}"
+              value="${escAttr(t.emoji)}" maxlength="2" placeholder="🏆"
+              style="border-color:${t.color}44;"
+              onblur="saveTeamEmoji(${i})"
+              onkeydown="if(event.key==='Enter')this.blur()">
+            <input class="lobby-team-name-input" id="lt-name-${i}"
+              value="${escAttr(t.name)}" placeholder="Team ${i+1} Name"
+              style="color:${t.color};"
+              onblur="saveTeamName(${i})"
+              onkeydown="if(event.key==='Enter')this.blur()">
           </div>
+          <div style="font-size:10px;color:var(--dim2);margin-bottom:6px;">${tp.length} player${tp.length!==1?'s':''}</div>
           ${tp.length === 0
-            ? '<div class="lobby-empty-team">Empty</div>'
+            ? '<div class="lobby-empty-team">Empty — assign players above</div>'
             : tp.map(p => `
               <div class="lobby-member-row">
                 <span class="lobby-mname ${!p.sid ? 'offline' : ''}">${esc(p.name)}</span>
                 <button class="lobby-cap-btn ${p.isCaptain ? 'active' : ''}"
-                  onclick="setCaptain(${esc(JSON.stringify(p.name))}, ${i})" title="Make Captain">★</button>
+                  onclick="setCaptain(${esc(JSON.stringify(p.name))}, ${i})" title="${p.isCaptain ? 'Captain' : 'Make Captain'}">★</button>
                 <button class="lobby-remove-btn"
                   onclick="removePlayer(${esc(JSON.stringify(p.name))})" title="Remove from team">✕</button>
               </div>`).join('')}
@@ -885,6 +885,15 @@ function bindLobby() {
 function assignPlayer(name, teamIdx) { emit('host:assignPlayer', { name, teamIdx }); }
 function setCaptain(name, teamIdx)   { emit('host:setCaptain',   { name, teamIdx }); }
 function removePlayer(name)          { emit('host:removePlayer', { name }); }
+
+function saveTeamName(i) {
+  const el = document.getElementById(`lt-name-${i}`);
+  if (el) emit('host:renameTeam', { teamIdx: i, name: el.value });
+}
+function saveTeamEmoji(i) {
+  const el = document.getElementById(`lt-emoji-${i}`);
+  if (el) emit('host:renameTeam', { teamIdx: i, emoji: el.value });
+}
 
 // Initial render
 S = { phase:'setup', teams:[

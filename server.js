@@ -318,11 +318,24 @@ io.on('connection', socket => {
     broadcastPlayers();
   });
 
+  // ── Host: rename team (name or emoji) ─────────────────────────────────────
+  socket.on('host:renameTeam', ({ teamIdx, name, emoji }) => {
+    if (!G.teams[teamIdx]) return;
+    if (name  !== undefined) G.teams[teamIdx].name  = String(name).trim().slice(0, 22) || G.teams[teamIdx].name;
+    if (emoji !== undefined) G.teams[teamIdx].emoji = String(emoji).trim().slice(0, 2);
+    bcast();
+  });
+
   // ── Host: assign player to team ────────────────────────────────────────────
   socket.on('host:assignPlayer', ({ name, teamIdx }) => {
     const lk = String(name || '').toLowerCase();
     if (!activePlayers[lk] || teamIdx < 0 || teamIdx >= G.teams.length) return;
     activePlayers[lk].teamIdx = teamIdx;
+    // Auto-captain if this team has no captain yet
+    const hasTeamCaptain = Object.values(activePlayers).some(
+      p => p.teamIdx === teamIdx && p.isCaptain
+    );
+    if (!hasTeamCaptain) activePlayers[lk].isCaptain = true;
     syncTeamMembers();
     bcast();
     broadcastPlayers();
@@ -345,8 +358,15 @@ io.on('connection', socket => {
   socket.on('host:removePlayer', ({ name }) => {
     const lk = String(name || '').toLowerCase();
     if (!activePlayers[lk]) return;
-    activePlayers[lk].teamIdx = null;
+    const prevTeam   = activePlayers[lk].teamIdx;
+    const wasCaptain = activePlayers[lk].isCaptain;
+    activePlayers[lk].teamIdx   = null;
     activePlayers[lk].isCaptain = false;
+    // Auto-promote another player as captain if the removed player was captain
+    if (wasCaptain && prevTeam !== null) {
+      const remaining = Object.values(activePlayers).filter(p => p.teamIdx === prevTeam);
+      if (remaining.length > 0) remaining[0].isCaptain = true;
+    }
     syncTeamMembers();
     bcast();
     broadcastPlayers();
