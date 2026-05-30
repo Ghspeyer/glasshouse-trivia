@@ -115,6 +115,13 @@ const ROUNDS = [
 // ════════════════════════════════════════════════════════════════════════════
 let G = initState();
 
+// ── Chat history (up to 50 messages per team, keyed by team index) ──
+const chatHistory = {};
+function getChatHistory(idx) {
+  if (!chatHistory[idx]) chatHistory[idx] = [];
+  return chatHistory[idx];
+}
+
 function initState() {
   return {
     phase: 'setup',
@@ -256,6 +263,7 @@ io.on('connection', socket => {
   socket.on('host:restart', () => {
     G = initState();
     resetTimer();
+    Object.keys(chatHistory).forEach(k => delete chatHistory[k]);
     bcast();
   });
 
@@ -289,6 +297,24 @@ io.on('connection', socket => {
         bcast();
       }
     }
+  });
+
+  socket.on('chat:join', (idx) => {
+    [...socket.rooms].filter(r => r.startsWith('chat:')).forEach(r => socket.leave(r));
+    socket.join('chat:' + idx);
+    socket.emit('chat:history', getChatHistory(idx).slice(-50));
+  });
+
+  socket.on('chat:send', ({ teamIdx: idx, name, msg }) => {
+    if (typeof idx !== 'number' || idx < 0 || idx >= G.teams.length) return;
+    const text = String(msg || '').trim().slice(0, 300);
+    if (!text) return;
+    const pName = String(name || 'Anonymous').trim().slice(0, 30) || 'Anonymous';
+    const entry = { name: pName, msg: text, ts: Date.now() };
+    const hist = getChatHistory(idx);
+    hist.push(entry);
+    if (hist.length > 50) hist.shift();
+    io.to('chat:' + idx).emit('chat:msg', entry);
   });
 
   socket.on('play:answer', ({ round, qIdx, teamIdx, answer }) => {

@@ -116,7 +116,7 @@
   /* Main content */
   .play-main {
     flex: 1; display: flex; flex-direction: column;
-    padding: 20px 16px 100px; gap: 16px;
+    padding: 20px 16px 280px; gap: 16px;
     max-width: 600px; margin: 0 auto; width: 100%;
   }
 
@@ -296,6 +296,90 @@
   @keyframes popIn  { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
 
   .hidden { display: none !important; }
+
+  /* ── PLAYER NAME INPUT ──────────────────────────────────────────── */
+  .name-input-wrap { width: 100%; max-width: 420px; }
+  .player-name-input {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: #fff; font-size: 15px;
+    padding: 12px 16px; outline: none;
+    font-family: inherit; -webkit-appearance: none;
+    text-align: center;
+  }
+  .player-name-input::placeholder { color: rgba(255,255,255,0.3); }
+  .player-name-input:focus { border-color: var(--cyan); }
+
+  /* ── TEAM CHAT PANEL ─────────────────────────────────────────────── */
+  #chatPanel {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(5,11,20,0.97);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    z-index: 200;
+    display: flex; flex-direction: column;
+    max-height: 260px;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+  }
+  #chatPanel.hidden  { display: none !important; }
+  #chatPanel.collapsed { max-height: none; }
+  #chatPanel.collapsed #chatBody { display: none; }
+
+  .chat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; flex-shrink: 0;
+    user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  .chat-header-left { display: flex; align-items: center; gap: 8px; }
+  .chat-title { font-size: 13px; font-weight: 700; color: var(--cyan); }
+  .chat-unread-badge {
+    background: var(--red); color: #fff;
+    font-size: 10px; font-weight: 800;
+    padding: 1px 6px; border-radius: 10px;
+    min-width: 18px; text-align: center;
+    animation: popIn .2s ease;
+  }
+  .chat-toggle-icon { font-size: 11px; color: rgba(255,255,255,0.35); }
+
+  #chatBody { display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 4px 16px 8px;
+    display: flex; flex-direction: column; gap: 4px;
+    min-height: 0;
+  }
+  .chat-msg { font-size: 13px; line-height: 1.45; word-break: break-word; }
+  .chat-author { font-weight: 700; margin-right: 2px; }
+  .chat-author.is-me    { color: var(--green); }
+  .chat-author.is-other { color: var(--cyan);  }
+  .chat-text  { color: rgba(255,255,255,0.85); }
+  .chat-empty { font-size: 12px; color: rgba(255,255,255,0.3); text-align: center; padding: 12px 0; }
+
+  .chat-input-row {
+    display: flex; gap: 8px;
+    padding: 8px 12px 10px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .chat-input {
+    flex: 1; background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 10px; color: #fff;
+    font-size: 14px; padding: 9px 12px;
+    outline: none; font-family: inherit;
+    -webkit-appearance: none;
+  }
+  .chat-input:focus { border-color: var(--cyan); }
+  .chat-send-btn {
+    background: var(--cyan); color: var(--navy2);
+    border: none; border-radius: 10px;
+    font-size: 18px; font-weight: 800;
+    width: 44px; height: 40px;
+    cursor: pointer; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chat-send-btn:active { opacity: 0.8; }
 </style>
 </head>
 <body>
@@ -308,7 +392,32 @@
       <h1>Trivia Night</h1>
       <p>Select your team to join</p>
     </div>
+    <div class="name-input-wrap">
+      <input type="text" id="playerNameInput" class="player-name-input"
+        placeholder="Your name (shown in team chat)" maxlength="30" autocomplete="off">
+    </div>
     <div class="team-grid" id="teamGrid"></div>
+  </div>
+
+  <!-- ════ TEAM CHAT PANEL ════ -->
+  <div id="chatPanel" class="hidden">
+    <div class="chat-header" id="chatHeader">
+      <div class="chat-header-left">
+        💬&nbsp;<span class="chat-title" id="chatTitle">Team Chat</span>
+        <span class="chat-unread-badge hidden" id="chatUnread"></span>
+      </div>
+      <span class="chat-toggle-icon" id="chatToggleIcon">▼</span>
+    </div>
+    <div id="chatBody">
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-empty">Say something to get started!</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" type="text"
+          placeholder="Message your team…" maxlength="200" autocomplete="off">
+        <button class="chat-send-btn" id="chatSendBtn">↑</button>
+      </div>
+    </div>
   </div>
 
   <!-- ════ GAME VIEW ════ -->
@@ -336,6 +445,12 @@
   let state   = null;
   let timer   = { sec: 30, running: false };
   let teamIdx = null;
+
+  // ── Chat ─────────────────────────────────────────────────────────
+  let playerName    = (localStorage.getItem('gh_name') || '').trim();
+  let chatJoined    = -1;
+  let chatCollapsed = false;
+  let chatUnreadCt  = 0;
 
   // ── Audio ────────────────────────────────────────────────────────
   let audioCtx = null;
@@ -406,7 +521,7 @@
     return v !== null ? parseInt(v, 10) : null;
   }
   function saveTeam(idx) { localStorage.setItem('gh_team', String(idx)); }
-  function clearTeam()   { localStorage.removeItem('gh_team'); teamIdx = null; }
+  function clearTeam()   { localStorage.removeItem('gh_team'); teamIdx = null; chatJoined = -1; }
 
   // ── DOM refs ─────────────────────────────────────────────────────
   const $teamSelect = document.getElementById('teamSelect');
@@ -418,6 +533,13 @@
   const $headerName = document.getElementById('headerTeamName');
   const $headerEmoji= document.getElementById('headerEmoji');
 
+  const $chatPanel  = document.getElementById('chatPanel');
+  const $chatMsgs   = document.getElementById('chatMessages');
+  const $chatInput  = document.getElementById('chatInput');
+  const $chatUnread = document.getElementById('chatUnread');
+  const $chatToggle = document.getElementById('chatToggleIcon');
+  const $chatTitle  = document.getElementById('chatTitle');
+
   document.getElementById('changeTeamBtn').addEventListener('click', () => {
     clearTeam(); showTeamSelect();
   });
@@ -426,12 +548,15 @@
   function showTeamSelect() {
     $teamSelect.style.display = 'flex';
     $gameView.style.display   = 'none';
+    $chatPanel.classList.add('hidden');
     renderTeamSelect();
   }
   function showGame() {
     $teamSelect.style.display = 'none';
     $gameView.style.display   = 'flex';
+    $chatPanel.classList.remove('hidden');
     updateHeader();
+    joinTeamChat();
     render();
   }
 
@@ -473,6 +598,7 @@
     $headerDot.style.background = team.color;
     $headerName.textContent = team.name;
     $headerEmoji.textContent = team.emoji || '';
+    updateChatTitle();
   }
 
   // ── Timer display ────────────────────────────────────────────────
@@ -480,6 +606,55 @@
     const s = timer.sec;
     $timer.textContent = (s === 0 && !timer.running) ? '–' : String(s);
     $timer.classList.toggle('urgent', s > 0 && s <= 10 && timer.running);
+  }
+
+  // ── Chat ─────────────────────────────────────────────────────────
+  function joinTeamChat() {
+    if (teamIdx === null || teamIdx === chatJoined) return;
+    chatJoined = teamIdx;
+    socket.emit('chat:join', teamIdx);
+    updateChatTitle();
+  }
+
+  function updateChatTitle() {
+    if (!state || teamIdx === null || !state.teams || !state.teams[teamIdx]) return;
+    const t = state.teams[teamIdx];
+    $chatTitle.textContent = t.name + ' Chat';
+    $chatTitle.style.color = t.color;
+  }
+
+  function toggleChat() {
+    chatCollapsed = !chatCollapsed;
+    $chatPanel.classList.toggle('collapsed', chatCollapsed);
+    $chatToggle.textContent = chatCollapsed ? '▲' : '▼';
+    if (!chatCollapsed) { chatUnreadCt = 0; renderUnread(); scrollChat(); }
+  }
+
+  function renderUnread() {
+    if (chatUnreadCt > 0) {
+      $chatUnread.textContent = chatUnreadCt > 9 ? '9+' : String(chatUnreadCt);
+      $chatUnread.classList.remove('hidden');
+    } else {
+      $chatUnread.classList.add('hidden');
+    }
+  }
+
+  function scrollChat() { $chatMsgs.scrollTop = $chatMsgs.scrollHeight; }
+
+  function addMsgEl(entry, isMe) {
+    const empty = $chatMsgs.querySelector('.chat-empty');
+    if (empty) empty.remove();
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = `<span class="chat-author ${isMe ? 'is-me' : 'is-other'}">${esc(entry.name)}:</span> <span class="chat-text">${esc(entry.msg)}</span>`;
+    $chatMsgs.appendChild(div);
+  }
+
+  function sendChat() {
+    const msg = $chatInput.value.trim();
+    if (!msg || teamIdx === null) return;
+    socket.emit('chat:send', { teamIdx, name: playerName || 'Anonymous', msg });
+    $chatInput.value = '';
   }
 
   // ── Main render ──────────────────────────────────────────────────
@@ -660,7 +835,24 @@
     }
 
     if (teamIdx === null) { showTeamSelect(); }
-    else { updateHeader(); render(); }
+    else { updateHeader(); joinTeamChat(); render(); }
+  });
+
+  socket.on('chat:history', history => {
+    $chatMsgs.innerHTML = '';
+    if (!history.length) {
+      $chatMsgs.innerHTML = '<div class="chat-empty">Say something to get started!</div>';
+      return;
+    }
+    history.forEach(e => addMsgEl(e, !!(playerName && e.name === playerName)));
+    scrollChat();
+  });
+
+  socket.on('chat:msg', entry => {
+    const isMe = !!(playerName && entry.name === playerName);
+    addMsgEl(entry, isMe);
+    scrollChat();
+    if (chatCollapsed && !isMe) { chatUnreadCt++; renderUnread(); }
   });
 
   socket.on('timer', t => {
@@ -678,11 +870,27 @@
     }
   });
 
+  // ── Chat event listeners ─────────────────────────────────────────
+  document.getElementById('chatHeader').addEventListener('click', toggleChat);
+  document.getElementById('chatSendBtn').addEventListener('click', sendChat);
+  $chatInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); sendChat(); }
+  });
+
+  // ── Player name input ────────────────────────────────────────────
+  const $nameIn = document.getElementById('playerNameInput');
+  $nameIn.value = playerName;
+  $nameIn.addEventListener('input', () => {
+    playerName = $nameIn.value.trim();
+    localStorage.setItem('gh_name', playerName);
+  });
+
   // ── Init ─────────────────────────────────────────────────────────
   teamIdx = loadTeam();
   if (teamIdx !== null) {
     $teamSelect.style.display = 'none';
     $gameView.style.display   = 'flex';
+    $chatPanel.classList.remove('hidden');
   }
 
   // ── Utils ────────────────────────────────────────────────────────
