@@ -16,17 +16,20 @@ body { font-family:'Segoe UI',Calibri,Arial,sans-serif; background:var(--nav); c
 body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,200,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.05) 1px,transparent 1px); background-size:38px 38px; pointer-events:none; z-index:0; }
 
 /* ── Header ── */
-#hdr { display:flex; align-items:center; justify-content:space-between; padding:0 18px; height:52px; background:rgba(8,18,31,.97); border-bottom:2px solid var(--cyan); flex-shrink:0; position:relative; z-index:10; }
-.logo { font-family:'Arial Black',Arial,sans-serif; font-size:15px; }
+#hdr { display:flex; align-items:center; justify-content:space-between; padding:0 14px; height:52px; background:rgba(8,18,31,.97); border-bottom:2px solid var(--cyan); flex-shrink:0; position:relative; z-index:10; gap:8px; }
+.logo { font-family:'Arial Black',Arial,sans-serif; font-size:14px; white-space:nowrap; }
 .logo em { color:var(--cyan); font-style:normal; }
-#score-bar { display:flex; gap:8px; }
-.sc-chip { display:flex; flex-direction:column; align-items:center; padding:3px 11px 4px; border-radius:4px; border:1.5px solid; min-width:70px; }
-.sc-chip .sc-n { font-size:9px; opacity:.7; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; overflow:hidden; max-width:80px; text-overflow:ellipsis; }
-.sc-chip .sc-v { font-family:'Arial Black',Arial,sans-serif; font-size:21px; line-height:1.1; }
-.hdr-r { display:flex; gap:7px; }
-.btn-hdr { padding:5px 10px; border-radius:4px; border:1px solid rgba(0,200,255,.35); background:rgba(0,200,255,.07); color:var(--cyan); font-size:11.5px; cursor:pointer; transition:background .15s; white-space:nowrap; }
+#score-bar { display:flex; gap:6px; flex:1; justify-content:center; overflow:hidden; }
+.sc-chip { display:flex; flex-direction:column; align-items:center; padding:2px 9px 3px; border-radius:4px; border:1.5px solid; min-width:64px; }
+.sc-chip .sc-n { font-size:8px; opacity:.7; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; overflow:hidden; max-width:80px; text-overflow:ellipsis; }
+.sc-chip .sc-v { font-family:'Arial Black',Arial,sans-serif; font-size:19px; line-height:1.1; }
+.hdr-r { display:flex; gap:5px; flex-shrink:0; }
+.btn-hdr { padding:4px 9px; border-radius:4px; border:1px solid rgba(0,200,255,.35); background:rgba(0,200,255,.07); color:var(--cyan); font-size:11px; cursor:pointer; transition:background .15s; white-space:nowrap; }
 .btn-hdr:hover { background:rgba(0,200,255,.15); }
 .btn-hdr.on { background:rgba(0,200,255,.22); border-color:var(--cyan); }
+.btn-hdr.danger { border-color:rgba(255,82,82,.4); color:var(--red); background:rgba(255,82,82,.07); }
+.btn-hdr.danger:hover { background:rgba(255,82,82,.14); }
+.btn-hdr.danger.confirming { background:rgba(255,82,82,.2); border-color:var(--red); }
 
 /* ── Layout ── */
 #main { display:flex; flex:1; overflow:hidden; position:relative; z-index:1; }
@@ -34,10 +37,10 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 #host { width:400px; flex-shrink:0; border-left:1px solid rgba(0,200,255,.15); background:rgba(8,18,31,.92); overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; transition:width .3s, opacity .3s; }
 #host.proj { width:0; opacity:0; overflow:hidden; }
 
-/* ── Slide display ── */
+/* ── Slide ── */
 .slide { width:100%; height:100%; border-radius:8px; position:relative; display:flex; flex-direction:column; box-shadow:0 0 60px rgba(0,200,255,.08),0 0 0 1px rgba(0,200,255,.12); overflow:hidden; background:var(--nav2); }
 
-/* Setup */
+/* ── Setup ── */
 #setup-screen { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
 .sw { width:100%; max-width:860px; }
 .sh { text-align:center; margin-bottom:26px; }
@@ -52,21 +55,20 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .tc-h input.tcn::placeholder { opacity:.4; }
 .tc-b { padding:9px 13px 11px; }
 .tc-lbl { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dim2); margin-bottom:6px; }
+.tc-emoji-row { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+.tc-emoji-input { width:44px; font-size:20px; text-align:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:4px; padding:2px 4px; color:var(--white); }
+.tc-emoji-input:focus { outline:none; border-color:rgba(255,255,255,.3); }
+.emoji-presets { display:flex; gap:3px; flex-wrap:wrap; }
+.ep { font-size:15px; cursor:pointer; padding:2px 3px; border-radius:3px; border:none; background:rgba(255,255,255,.05); }
+.ep:hover { background:rgba(255,255,255,.12); }
 .tc-mems { display:flex; flex-direction:column; gap:4px; }
 .tc-mems input { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-radius:3px; padding:4px 7px; color:var(--white); font-size:12px; font-family:inherit; }
 .tc-mems input:focus { outline:none; border-color:rgba(255,255,255,.28); }
 .tc-mems input::placeholder { color:rgba(255,255,255,.22); }
-/* Emoji row in setup */
-.tc-emoji-row { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
-.tc-emoji-input { width:48px; font-size:22px; text-align:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:4px; padding:3px 4px; color:var(--white); }
-.tc-emoji-input:focus { outline:none; border-color:rgba(255,255,255,.3); }
-.emoji-presets { display:flex; gap:4px; flex-wrap:wrap; }
-.ep { font-size:16px; cursor:pointer; padding:2px 4px; border-radius:3px; transition:background .1s; border:none; background:rgba(255,255,255,.05); }
-.ep:hover { background:rgba(255,255,255,.12); }
 .btn-start { display:block; width:100%; padding:13px; background:var(--cyan); color:var(--nav); border:none; border-radius:7px; font-family:'Arial Black',Arial,sans-serif; font-size:16px; cursor:pointer; letter-spacing:1.5px; transition:opacity .15s,transform .1s; }
 .btn-start:hover { opacity:.88; transform:translateY(-1px); }
 
-/* Round intro */
+/* ── Round intro ── */
 .slide-ri { display:flex; flex-direction:column; justify-content:center; padding:36px 44px 36px 52px; height:100%; }
 .ri-lbl { font-size:12px; letter-spacing:4px; text-transform:uppercase; margin-bottom:4px; opacity:.8; }
 .ri-num { font-family:'Arial Black',Arial,sans-serif; font-size:clamp(80px,15vw,170px); line-height:.82; margin-bottom:12px; }
@@ -75,7 +77,7 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .ri-note { margin-top:8px; font-size:11.5px; opacity:.55; }
 .ri-prompt { margin-top:18px; font-size:11px; color:rgba(255,255,255,.2); }
 
-/* Question */
+/* ── Question ── */
 .slide-q { display:flex; flex-direction:column; height:100%; }
 .q-bar { display:flex; align-items:center; justify-content:space-between; padding:10px 18px; font-size:12px; border-bottom:1px solid rgba(255,255,255,.06); flex-shrink:0; }
 .q-cat { font-weight:700; letter-spacing:.4px; }
@@ -89,7 +91,7 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .qa-lbl { font-size:10px; letter-spacing:3px; opacity:.7; margin-bottom:4px; }
 .qa-text { font-family:'Arial Black',Arial,sans-serif; font-size:clamp(18px,3vw,38px); line-height:1.2; white-space:pre-wrap; }
 
-/* Final */
+/* ── Final ── */
 .slide-final { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px 40px; height:100%; overflow-y:auto; }
 .f-h1 { font-family:'Arial Black',Arial,sans-serif; font-size:clamp(28px,4vw,52px); color:var(--cyan); text-shadow:0 0 30px var(--cglow); margin-bottom:6px; }
 .f-winner-name { font-family:'Arial Black',Arial,sans-serif; font-size:clamp(22px,3.5vw,44px); margin-bottom:4px; }
@@ -102,7 +104,7 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .f-prize { font-size:clamp(12px,1.4vw,15px); color:var(--dim); padding:10px 20px; border:1px solid rgba(255,255,255,.12); border-radius:6px; background:rgba(255,255,255,.03); max-width:460px; }
 .f-hat-img { width:100px; height:auto; display:block; margin:10px auto 6px; }
 
-/* Scoreboard overlay */
+/* ── Scoreboard overlay ── */
 #sb { position:fixed; inset:0; background:rgba(5,11,20,.97); z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:36px; }
 #sb.hidden { display:none; }
 .sb-h { font-family:'Arial Black',Arial,sans-serif; font-size:clamp(32px,5vw,52px); color:var(--cyan); text-shadow:0 0 40px var(--cglow); text-align:center; margin-bottom:4px; }
@@ -118,46 +120,63 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .btn-sb-close { margin-top:28px; padding:9px 28px; border-radius:6px; font-size:13px; cursor:pointer; letter-spacing:.8px; background:transparent; color:var(--cyan); border:1.5px solid var(--cyan); transition:background .15s; }
 .btn-sb-close:hover { background:rgba(0,200,255,.1); }
 
+/* ── Admin overlay ── */
+#admin { position:fixed; inset:0; background:rgba(5,11,20,.99); z-index:400; display:flex; flex-direction:column; }
+#admin.hidden { display:none; }
+.admin-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-bottom:2px solid var(--cyan); flex-shrink:0; }
+.admin-title { font-family:'Arial Black',Arial,sans-serif; font-size:17px; color:var(--cyan); }
+.admin-subtitle { font-size:11px; color:var(--dim); margin-top:2px; }
+.btn-admin-close { padding:7px 18px; border-radius:5px; border:1.5px solid rgba(0,200,255,.4); background:transparent; color:var(--cyan); font-size:12px; cursor:pointer; transition:background .12s; }
+.btn-admin-close:hover { background:rgba(0,200,255,.1); }
+.admin-body { display:flex; flex:1; overflow:hidden; }
+.admin-sidebar { width:170px; flex-shrink:0; border-right:1px solid rgba(255,255,255,.07); overflow-y:auto; padding:10px 0; }
+.admin-round-btn { display:block; width:100%; text-align:left; padding:9px 16px; border:none; background:transparent; color:rgba(255,255,255,.5); font-size:12px; cursor:pointer; transition:background .12s,color .12s,border-color .12s; border-left:3px solid transparent; }
+.admin-round-btn.active { background:rgba(0,200,255,.1); color:var(--cyan); border-left-color:var(--cyan); }
+.admin-round-btn:hover:not(.active) { background:rgba(255,255,255,.04); color:rgba(255,255,255,.8); }
+.admin-content { flex:1; overflow-y:auto; padding:20px 28px; display:flex; flex-direction:column; gap:14px; }
+.admin-q-card { background:var(--nav3); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:16px 18px; }
+.admin-q-hdr { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.admin-q-num { font-family:'Arial Black',Arial,sans-serif; font-size:13px; color:var(--dim); }
+.admin-diff { font-size:10px; padding:1px 8px; border-radius:8px; }
+.admin-field-lbl { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--dim2); margin-bottom:4px; margin-top:10px; }
+.admin-field-lbl:first-of-type { margin-top:0; }
+.admin-ta { width:100%; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.1); border-radius:5px; color:var(--white); font-size:13px; font-family:inherit; padding:8px 10px; resize:vertical; line-height:1.5; }
+.admin-ta:focus { outline:none; border-color:rgba(0,200,255,.45); }
+.admin-save-row { display:flex; align-items:center; gap:10px; margin-top:12px; }
+.btn-admin-save { padding:6px 18px; border-radius:4px; border:none; background:var(--cyan); color:var(--nav); font-size:12px; font-weight:700; cursor:pointer; letter-spacing:.5px; transition:opacity .12s; }
+.btn-admin-save:hover { opacity:.85; }
+.admin-saved { font-size:11px; color:var(--green); font-weight:700; opacity:0; transition:opacity .25s; }
+.admin-saved.show { opacity:1; }
+.admin-footer { padding:10px 24px; border-top:1px solid rgba(255,255,255,.06); font-size:11px; color:rgba(255,255,255,.28); flex-shrink:0; }
+
 /* ── Host sidebar ── */
 .hp { padding:11px 14px; border-bottom:1px solid rgba(255,255,255,.05); flex-shrink:0; }
 .hp:last-child { border-bottom:none; }
 .hp-lbl { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--dim2); margin-bottom:8px; }
-
-/* Nav — TOP of sidebar */
 .nav-row { display:flex; gap:6px; }
 .btn-nav { flex:1; padding:9px 6px; border-radius:5px; border:1.5px solid rgba(0,200,255,.3); background:rgba(0,200,255,.05); color:var(--cyan); font-size:13px; font-weight:700; cursor:pointer; transition:background .12s; }
 .btn-nav:hover { background:rgba(0,200,255,.1); }
 .btn-nav.pri { background:var(--cyan); color:var(--nav); border-color:var(--cyan); }
 .btn-nav.pri:hover { opacity:.88; }
-
-/* Reveal */
 .btn-rev { width:100%; padding:9px; border-radius:5px; border:2px solid; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:.8px; transition:all .15s; }
 .btn-rev.show { background:var(--green); border-color:var(--green); color:var(--nav); }
 .btn-rev.hide { background:transparent; border-color:rgba(255,255,255,.18); color:var(--dim); }
-
-/* Position info */
 .pos-txt { font-family:'Arial Black',Arial,sans-serif; font-size:15px; margin-bottom:2px; }
 .pos-sub { font-size:11.5px; color:var(--dim); }
-
-/* Timer */
 #timer-val { font-family:'Arial Black',Arial,sans-serif; font-size:50px; text-align:center; line-height:1; margin:4px 0 7px; transition:color .4s; }
 .timer-row { display:flex; gap:6px; }
 .btn-t { flex:1; padding:6px; border-radius:4px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:var(--white); font-size:11.5px; cursor:pointer; transition:background .12s; }
 .btn-t:hover { background:rgba(255,255,255,.08); }
 .btn-t.on { background:rgba(0,200,255,.12); border-color:var(--cyan); color:var(--cyan); }
-
-/* Correct answer (host-only preview) */
 .host-ans-box { background:rgba(0,230,118,.08); border:1px solid rgba(0,230,118,.25); border-radius:5px; padding:8px 10px; margin-top:2px; }
 .host-ans-lbl { font-size:9px; letter-spacing:2px; color:var(--green); text-transform:uppercase; margin-bottom:3px; opacity:.8; }
 .host-ans-txt { font-size:14px; font-weight:700; color:var(--white); white-space:pre-wrap; line-height:1.35; }
-
-/* Team answer rows */
 .team-row { border:1px solid rgba(255,255,255,.07); border-radius:6px; overflow:hidden; margin-bottom:7px; }
 .team-row:last-child { margin-bottom:0; }
 .tr-head { display:flex; align-items:center; justify-content:space-between; padding:5px 9px; }
 .tr-dot { width:7px; height:7px; border-radius:50%; margin-right:6px; flex-shrink:0; }
 .tr-nw { display:flex; align-items:center; flex:1; min-width:0; }
-.tr-name { font-size:11.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tr-name { font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .tr-score { font-family:'Arial Black',Arial,sans-serif; font-size:17px; }
 .tr-ans { padding:9px 11px; background:rgba(0,0,0,.2); font-size:14px; min-height:38px; }
 .tr-ans-txt { color:var(--white); font-size:15px; font-weight:600; line-height:1.45; white-space:pre-wrap; }
@@ -170,32 +189,30 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .btn-ok.yes { background:var(--green); color:var(--nav); }
 .btn-ok.no  { background:rgba(255,82,82,.18); color:var(--red); border:1px solid rgba(255,82,82,.35); }
 .tr-result { font-size:10px; text-align:center; padding:2px; font-weight:700; letter-spacing:1px; }
-
 .btn-sb-trigger { width:100%; padding:8px; border-radius:5px; border:1px solid rgba(255,215,0,.28); background:rgba(255,215,0,.04); color:var(--gold); font-size:12px; cursor:pointer; letter-spacing:.8px; transition:background .12s; }
 .btn-sb-trigger:hover { background:rgba(255,215,0,.09); }
 .keys { font-size:10.5px; color:rgba(255,255,255,.27); line-height:1.9; }
 .keys b { color:rgba(255,255,255,.52); }
 
 /* Scrollbar */
-#host::-webkit-scrollbar { width:3px; }
-#host::-webkit-scrollbar-thumb { background:rgba(0,200,255,.18); border-radius:2px; }
+#host::-webkit-scrollbar, .admin-sidebar::-webkit-scrollbar, .admin-content::-webkit-scrollbar { width:3px; }
+#host::-webkit-scrollbar-thumb, .admin-sidebar::-webkit-scrollbar-thumb, .admin-content::-webkit-scrollbar-thumb { background:rgba(0,200,255,.18); border-radius:2px; }
 
-/* Utils */
 .hidden { display:none !important; }
 @keyframes fadeSlide { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
 .fade-in { animation:fadeSlide .35s ease both; }
-@keyframes pop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.35)} }
-.pop { animation:pop .35s ease; }
 </style>
 </head>
 <body>
 
 <div id="hdr">
-  <div class="logo">Glass<em>House</em> <span style="opacity:.5;font-size:12px;font-family:Calibri,sans-serif;font-weight:normal;">HOST</span></div>
+  <div class="logo">Glass<em>House</em> <span style="opacity:.5;font-size:11px;font-family:Calibri,sans-serif;font-weight:normal;">HOST</span></div>
   <div id="score-bar"></div>
   <div class="hdr-r">
+    <button class="btn-hdr" onclick="openAdmin()">✏️ Questions</button>
     <button class="btn-hdr" id="btn-proj" onclick="toggleProj()">⊞ Projector</button>
-    <button class="btn-hdr" onclick="emit('host:scoreboard')">★ Scoreboard</button>
+    <button class="btn-hdr" onclick="emit('host:scoreboard')">★ Scores</button>
+    <button class="btn-hdr danger" id="btn-restart" onclick="confirmRestart()">↺ Restart</button>
   </div>
 </div>
 
@@ -204,6 +221,7 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
   <div id="host"></div>
 </div>
 
+<!-- Scoreboard overlay -->
 <div id="sb" class="hidden">
   <div class="sb-h">SCOREBOARD</div>
   <div class="sb-sub" id="sb-sub"></div>
@@ -211,20 +229,36 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
   <button class="btn-sb-close" onclick="closeSb()">CONTINUE ▶</button>
 </div>
 
+<!-- Admin overlay -->
+<div id="admin" class="hidden">
+  <div class="admin-hdr">
+    <div>
+      <div class="admin-title">✏️ Edit Questions</div>
+      <div class="admin-subtitle">Changes are live immediately · Reset when server restarts</div>
+    </div>
+    <button class="btn-admin-close" onclick="closeAdmin()">✕ Close</button>
+  </div>
+  <div class="admin-body">
+    <div class="admin-sidebar" id="admin-sidebar"></div>
+    <div class="admin-content" id="admin-questions"></div>
+  </div>
+  <div class="admin-footer">Tip: edits to the currently-displayed question update the player view instantly.</div>
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
-// ── Local ROUNDS copy (host always sees correct answers) ─────────────────────
+// ── ROUNDS (must match server.js) ────────────────────────────────────────────
 const ROUNDS = [
   { name:'General Knowledge', color:'#00C8FF', questions:[
     {q:'How many bones does an adult human body have?',a:'206',d:2},
     {q:'What is the ONLY country in the world that borders both Spain AND France?',a:'Andorra',d:3},
-    {q:'What is the world\'s smallest country by area?',a:'Vatican City',d:2},
+    {q:'What is the chemical symbol for gold, and what Latin word does it derive from?',a:'Au — from "Aurum" (Latin for gold)',d:3},
     {q:'How many time zones does Russia span?',a:'11 time zones',d:3},
-    {q:'What is the only U.S. state that commercially grows coffee?',a:'Hawaii',d:2},
+    {q:'How many countries in the world share a land border with China?',a:'14 countries',d:3},
   ]},
   { name:'World History', color:'#FFD700', questions:[
-    {q:'In what year did the Berlin Wall fall?',a:'1989',d:1},
+    {q:'In what year was the Magna Carta signed, and which English king was forced to seal it?',a:'1215 · King John',d:3},
     {q:'Who was the first woman to win a Nobel Prize?',a:'Marie Curie (1903 · Physics)',d:2},
     {q:'How many amendments does the United States Constitution currently have?',a:'27 amendments',d:3},
     {q:'The Black Death of the 14th century killed approximately what fraction of Europe\'s population?\n(Accept a range)',a:'One-third to one-half (accept 30–60%)',d:3},
@@ -239,20 +273,20 @@ const ROUNDS = [
   ]},
   { name:'Movie Quotes', color:'#FF6B6B', note:'Name the film (and actor/character when asked). All films from 1980 onward.', questions:[
     {q:'In what 1996 sports dramedy does a desperate agent try to win back his estranged wife with a heartfelt speech, only for her to stop him mid-sentence with "You had me at hello"?\n\nName the film.',a:'Jerry Maguire (1996)',d:2},
-    {q:'In what 1984 sci-fi thriller does a relentless cyborg calmly inform a police sergeant — moments before destroying the entire precinct — that "I\'ll be back"?\n\nName the film AND the actor who played the cyborg.',a:'The Terminator (1984) — Arnold Schwarzenegger',d:2},
+    {q:'In what 1999 sci-fi film does a computer hacker learn that all of reality is a simulation, and a mentor offers him a choice between a red pill and a blue pill?\n\nName the film AND the actress who played Trinity.',a:'The Matrix (1999) — Carrie-Anne Moss',d:3},
     {q:'In what 2008 Christopher Nolan film does the villain lean toward a hospitalized city official and whisper "Why so serious?" while recounting how he got his scars?\n\nName the film AND the actor who played the villain.',a:'The Dark Knight (2008) — Heath Ledger',d:3},
     {q:'In what 1994 film do two hitmen debate whether a foot massage qualifies as intimacy, while one casually notes that a "Royale with Cheese" is just the French name for a Quarter Pounder?\n\nName the film AND its director.',a:'Pulp Fiction (1994) — Quentin Tarantino',d:3},
     {q:'In what 1980 psychological horror film does a snowbound hotel caretaker — slowly losing his mind — hack through a bathroom door with an axe and shout "Here\'s Johnny!" at his terrified wife?\n\nName the film AND its director.',a:'The Shining (1980) — Stanley Kubrick',d:3},
   ]},
   { name:'90s & 2000s Hits', color:'#FFB74D', questions:[
-    {q:'Which beloved sitcom featured a character named "Cosmo Kramer"?',a:'Seinfeld',d:1},
+    {q:'In what year did "Seinfeld" air its controversial series finale, and what crime were the four main characters put on trial for?',a:'1998 · Violating a Good Samaritan law (failing to help a carjacking victim)',d:3},
     {q:'Destiny\'s Child released "Say My Name" in what year? (±1 year accepted)',a:'1999',d:2},
-    {q:'What was the name of the coffee shop where the Friends gang always hung out?',a:'Central Perk',d:1},
+    {q:'Which British rock band released the album "OK Computer" in 1997, widely considered one of the greatest albums ever made?',a:'Radiohead',d:3},
     {q:'Which boy band released the mega-hit album "Millennium" in 1999, featuring "I Want It That Way"?',a:'Backstreet Boys',d:2},
     {q:'What year did "American Idol" first air in the United States, and who won that inaugural season?',a:'2002 · Kelly Clarkson',d:3},
   ]},
   { name:'Back In My Day', color:'#00E676', questions:[
-    {q:'What classic toy was a plastic coiled spring that could "walk" down stairs?',a:'Slinky',d:1},
+    {q:'What year did "Space Invaders" first appear in U.S. arcades, and which Japanese company developed it?',a:'1978 · Taito Corporation',d:3},
     {q:'Before smartphones, what portable device let people listen to CDs on the go?',a:'Discman / Portable CD Player',d:1},
     {q:'This video rental giant had nearly 9,000 stores worldwide at its peak.\nName it AND the year it filed for bankruptcy.',a:'Blockbuster · 2010',d:3},
     {q:'What was the name of the dominant dial-up internet service that mailed millions of Americans free trial CDs throughout the 1990s?',a:'AOL (America Online)',d:2},
@@ -260,21 +294,21 @@ const ROUNDS = [
   ]},
   { name:'Potent Potables', color:'#FF6B6B', questions:[
     {q:'What spirit forms the base of a classic Mojito?',a:'Rum (White Rum)',d:1},
-    {q:'Which country is the original home of Guinness beer?',a:'Ireland',d:1},
+    {q:'What is the primary grain in bourbon whiskey\'s mash bill, and what percentage must it legally comprise?',a:'Corn · at least 51%',d:3},
     {q:'A classic Negroni has exactly three ingredients.\nName all three for full credit.',a:'Gin + Campari + Sweet Vermouth\n(must name all 3)',d:3},
     {q:'Tequila can only legally be produced in certain regions of Mexico.\nWhat specific plant must it be made from?',a:'Blue Agave (Weber blue agave)',d:2},
     {q:'The "Last Word" cocktail — popularized during Prohibition — is made with four equal-part ingredients.\nName all four for full credit.',a:'Gin + Green Chartreuse + Maraschino Liqueur + Fresh Lime Juice\n(must name all 4)',d:3},
   ]},
   { name:'Sports & Pop Culture', color:'#FFD700', questions:[
     {q:'Who holds the record for the most Grand Slam titles in women\'s tennis singles history?',a:'Serena Williams (23 titles)',d:2},
-    {q:'What city hosted the 2024 Summer Olympics?',a:'Paris, France',d:1},
+    {q:'Who holds the NFL record for most career rushing yards, and with which team did he spend the majority of his career?',a:'Emmitt Smith · Dallas Cowboys',d:3},
     {q:'What country has won the most FIFA World Cup titles?\n(Bonus: how many times?)',a:'Brazil — 5 times\n(1958, 1962, 1970, 1994, 2002)',d:3},
     {q:'In what year did Michael Jordan win his FIRST NBA Championship with the Chicago Bulls?',a:'1991',d:2},
     {q:'Which NFL quarterback was first to throw for more than 5,000 yards in a single regular season, and in what year?',a:'Dan Marino (Miami Dolphins) · 1984',d:3},
   ]},
   { name:'Food & Travel', color:'#00C8FF', questions:[
     {q:'What is the most visited country in the world by international tourists?',a:'France',d:2},
-    {q:'Sushi originated in which country?',a:'Japan',d:1},
+    {q:'What country produces more than 60% of the world\'s vanilla supply?',a:'Madagascar',d:3},
     {q:'What spice — harvested from the stigmas of a specific flower — is the most expensive spice in the world by weight?',a:'Saffron',d:3},
     {q:'Which country consumes the most chocolate per capita in the world?',a:'Switzerland',d:2},
     {q:'"Ceviche" is a dish where raw seafood is "cooked" without heat.\nWhat country is credited as its origin, and what acid is traditionally used to cure the fish?',a:'Peru · Lime juice (citric acid)',d:3},
@@ -283,8 +317,9 @@ const ROUNDS = [
 
 const DIFF_LABEL = {1:'Easy',2:'Medium',3:'Hard'};
 const DIFF_COLOR = {1:'rgba(0,230,118,.5)',2:'rgba(255,183,77,.5)',3:'rgba(255,82,82,.5)'};
+const DIFF_BG    = {1:'rgba(0,230,118,.18)',2:'rgba(255,183,77,.18)',3:'rgba(255,82,82,.18)'};
 const TEAM_COLORS = ['#00C8FF','#FF6B6B','#FFD700','#00E676'];
-const EMOJI_SUGGESTIONS = ['🦁','🐯','🦊','🦅','🐺','🐻','🦈','🦋','🐉','🦄','🍺','🎯'];
+const EMOJI_PRESETS = ['🦁','🐯','🦊','🦅','🐺','🐻','🦈','🦋','🐉','🦄','🍺','🎯'];
 
 // ── Socket ────────────────────────────────────────────────────────────────────
 const socket = io();
@@ -294,7 +329,6 @@ let S = null;
 let T = { sec:30, running:false };
 
 function emit(ev, data) { socket.emit(ev, data); }
-
 socket.on('state', s => { S = s; render(); });
 socket.on('timer', t => { T = t; refreshTimer(); });
 
@@ -305,12 +339,12 @@ document.addEventListener('keydown', e => {
   switch(e.key) {
     case ' ': case 'ArrowRight': e.preventDefault(); emit('host:next'); break;
     case 'ArrowLeft':            e.preventDefault(); emit('host:prev'); break;
-    case 'a': case 'A':          if (S.phase==='q') emit('host:reveal'); break;
-    case 't': case 'T':          emit('host:timer',{action: T.running?'stop':'start'}); break;
-    case 'r': case 'R':          emit('host:timer',{action:'reset'}); break;
-    case 's': case 'S':          emit('host:scoreboard'); break;
-    case 'p': case 'P':          toggleProj(); break;
-    case 'Escape':               closeSb(); break;
+    case 'a': case 'A':         if (S.phase==='q') emit('host:reveal'); break;
+    case 't': case 'T':         emit('host:timer',{action: T.running?'stop':'start'}); break;
+    case 'r': case 'R':         emit('host:timer',{action:'reset'}); break;
+    case 's': case 'S':         emit('host:scoreboard'); break;
+    case 'p': case 'P':         toggleProj(); break;
+    case 'Escape':              closeSb(); closeAdmin(); break;
   }
 });
 
@@ -324,15 +358,91 @@ function toggleProj() {
   b.classList.toggle('on', projOn);
 }
 
+// ── Restart ───────────────────────────────────────────────────────────────────
+let restartTimer = null;
+function confirmRestart() {
+  const btn = document.getElementById('btn-restart');
+  if (btn.dataset.confirming) {
+    clearTimeout(restartTimer);
+    delete btn.dataset.confirming;
+    btn.textContent = '↺ Restart';
+    btn.classList.remove('confirming');
+    emit('host:restart');
+  } else {
+    btn.dataset.confirming = '1';
+    btn.textContent = '⚠ Confirm?';
+    btn.classList.add('confirming');
+    restartTimer = setTimeout(() => {
+      delete btn.dataset.confirming;
+      btn.textContent = '↺ Restart';
+      btn.classList.remove('confirming');
+    }, 3000);
+  }
+}
+
+// ── Admin portal ──────────────────────────────────────────────────────────────
+let adminRound = 0;
+
+function openAdmin() {
+  document.getElementById('admin').classList.remove('hidden');
+  renderAdminSidebar();
+  renderAdminQuestions();
+}
+function closeAdmin() { document.getElementById('admin').classList.add('hidden'); }
+
+function renderAdminSidebar() {
+  document.getElementById('admin-sidebar').innerHTML = ROUNDS.map((r, i) => `
+    <button class="admin-round-btn ${i===adminRound?'active':''}"
+      onclick="selectAdminRound(${i})" style="${i===adminRound?'':''}">
+      <span style="font-size:10px;opacity:.5;">R${i+1}</span> ${r.name}
+    </button>`).join('');
+}
+
+function selectAdminRound(idx) {
+  adminRound = idx;
+  renderAdminSidebar();
+  renderAdminQuestions();
+}
+
+function renderAdminQuestions() {
+  const round = ROUNDS[adminRound];
+  const isNTT = adminRound === 2;
+  document.getElementById('admin-questions').innerHTML = round.questions.map((q, qi) => `
+    <div class="admin-q-card">
+      <div class="admin-q-hdr">
+        <span class="admin-q-num">Q${qi+1}</span>
+        <span class="admin-diff" style="background:${DIFF_BG[q.d]};color:${DIFF_COLOR[q.d].replace('.5)','.9)')}">${DIFF_LABEL[q.d]}</span>
+        ${isNTT ? '<span style="font-size:10px;color:var(--dim);opacity:.6;">Host plays clip</span>' : ''}
+      </div>
+      <div class="admin-field-lbl">Question</div>
+      <textarea class="admin-ta" id="aq-q-${adminRound}-${qi}" rows="3">${escAttr(q.q)}</textarea>
+      <div class="admin-field-lbl">Answer</div>
+      <textarea class="admin-ta" id="aq-a-${adminRound}-${qi}" rows="2">${escAttr(q.a)}</textarea>
+      <div class="admin-save-row">
+        <button class="btn-admin-save" onclick="saveAdminQ(${adminRound},${qi})">Save</button>
+        <span class="admin-saved" id="aq-msg-${adminRound}-${qi}">✓ Saved</span>
+      </div>
+    </div>`).join('');
+}
+
+function saveAdminQ(ri, qi) {
+  const qEl = document.getElementById(`aq-q-${ri}-${qi}`);
+  const aEl = document.getElementById(`aq-a-${ri}-${qi}`);
+  if (!qEl || !aEl) return;
+  const newQ = qEl.value;
+  const newA = aEl.value;
+  ROUNDS[ri].questions[qi].q = newQ;
+  ROUNDS[ri].questions[qi].a = newA;
+  emit('host:editQuestion', { roundIdx: ri, qIdx: qi, q: newQ, a: newA });
+  const msg = document.getElementById(`aq-msg-${ri}-${qi}`);
+  if (msg) { msg.classList.add('show'); setTimeout(() => msg.classList.remove('show'), 1500); }
+}
+
 // ── Scoreboard ────────────────────────────────────────────────────────────────
 function openSb() {
   if (!S) return;
-  const el = document.getElementById('sb');
-  const totalQ = 9 * 5;
   document.getElementById('sb-sub').textContent =
-    S.phase === 'final'
-      ? `Final Standings · ${totalQ} questions played`
-      : `After Round ${S.round} · standings so far`;
+    S.phase === 'final' ? 'Final Standings' : `After Round ${S.round} — standings so far`;
   const maxSc = Math.max(...S.teams.map(t=>t.score), 1);
   document.getElementById('sb-cols').innerHTML = S.teams.map(t => {
     const h = Math.max((t.score/maxSc)*180, 4);
@@ -345,12 +455,13 @@ function openSb() {
       ${mems?`<div class="sb-mems">${esc(mems)}</div>`:''}
     </div>`;
   }).join('');
-  el.classList.remove('hidden');
+  document.getElementById('sb').classList.remove('hidden');
 }
 function closeSb() { document.getElementById('sb').classList.add('hidden'); }
 
 // ── Render ────────────────────────────────────────────────────────────────────
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function render() {
   if (!S) return;
@@ -365,7 +476,7 @@ function renderScoreBar() {
   document.getElementById('score-bar').innerHTML = S.teams.map((t,i)=>`
     <div class="sc-chip" style="color:${t.color};border-color:${t.color}44;">
       <div class="sc-n">${t.emoji?t.emoji+' ':''}${esc(t.name)}</div>
-      <div class="sc-v" id="scv-${i}">${t.score}</div>
+      <div class="sc-v">${t.score}</div>
     </div>`).join('');
 }
 
@@ -382,14 +493,14 @@ function renderDisplay() {
   const el = document.getElementById('display');
   if (!S) return;
   if (S.phase==='setup') { el.innerHTML=renderSetup(); bindSetup(); return; }
-  if (S.phase==='ri')    { el.innerHTML=renderRI();    return; }
-  if (S.phase==='q')     { el.innerHTML=renderQ();     return; }
+  if (S.phase==='ri')    { el.innerHTML=renderRI(); return; }
+  if (S.phase==='q')     { el.innerHTML=renderQ(); return; }
   if (S.phase==='final') { el.innerHTML=renderFinal(); return; }
 }
 
 function renderSetup() {
   return `<div id="setup-screen"><div class="sw">
-    <div class="sh"><h1>TRIVIA NIGHT</h1><p>GlassHouse · Q2 2026 · Enter team names, members &amp; mascot emoji, then start</p></div>
+    <div class="sh"><h1>TRIVIA NIGHT</h1><p>GlassHouse · Q2 2026 · Enter team names, mascots &amp; members</p></div>
     <div class="tc-grid">
       ${[0,1,2,3].map(i=>`
         <div class="tc" style="border-color:${TEAM_COLORS[i]}44;">
@@ -402,13 +513,13 @@ function renderSetup() {
             <div class="tc-lbl" style="margin-bottom:4px;">Team Mascot</div>
             <div class="tc-emoji-row">
               <input class="tc-emoji-input" id="te-${i}" type="text" maxlength="2" placeholder="🏆">
-              <div class="emoji-presets" id="ep-${i}">
-                ${EMOJI_SUGGESTIONS.map(e=>`<button class="ep" onclick="pickEmoji(${i},'${e}')">${e}</button>`).join('')}
+              <div class="emoji-presets">
+                ${EMOJI_PRESETS.map(e=>`<button class="ep" onclick="pickEmoji(${i},'${e}')">${e}</button>`).join('')}
               </div>
             </div>
             <div class="tc-lbl">Team Members</div>
             <div class="tc-mems">
-              ${[0,1,2,3,4].map(m=>`<input id="tm-${i}-${m}" type="text" placeholder="Member ${m+1}" maxlength="30" value=""/>`).join('')}
+              ${[0,1,2,3,4].map(m=>`<input id="tm-${i}-${m}" type="text" placeholder="Member ${m+1}" maxlength="30"/>`).join('')}
             </div>
           </div>
         </div>`).join('')}
@@ -418,8 +529,8 @@ function renderSetup() {
 }
 
 function pickEmoji(teamIdx, emoji) {
-  const input = document.getElementById(`te-${teamIdx}`);
-  if (input) input.value = emoji;
+  const el = document.getElementById(`te-${teamIdx}`);
+  if (el) el.value = emoji;
 }
 
 function bindSetup() {
@@ -474,7 +585,6 @@ function renderFinal() {
   const winner = sorted[0];
   const winMembers = (winner.members||[]).filter(Boolean);
   const medals = ['🥇','🥈','🥉'];
-
   return `<div class="slide fade-in" style="background:var(--nav2);border:1px solid rgba(0,200,255,.2);">
     <div class="slide-final">
       <div class="f-h1">🎉 CONGRATULATIONS!</div>
@@ -498,13 +608,12 @@ function renderFinal() {
 
 function renderHost() {
   const el = document.getElementById('host');
-  if (!S || S.phase==='setup'||S.phase==='final') { el.innerHTML=''; return; }
+  if (!S || S.phase==='setup' || S.phase==='final') { el.innerHTML=''; return; }
   const isQ = S.phase==='q';
   const col = S.roundColor;
   const localQ = isQ ? ROUNDS[S.round]?.questions[S.qIdx] : null;
 
   el.innerHTML = `
-    <!-- NAV — always at top -->
     <div class="hp">
       <div class="hp-lbl">Navigation</div>
       <div class="nav-row">
@@ -513,22 +622,19 @@ function renderHost() {
       </div>
     </div>
 
-    ${isQ ? `<!-- Reveal -->
-    <div class="hp">
+    ${isQ ? `<div class="hp">
       <button class="btn-rev ${S.answerShown?'hide':'show'}" onclick="emit('host:reveal')">
         ${S.answerShown?'↑ Hide Answer':'▶ Reveal Answer'}
       </button>
     </div>` : ''}
 
-    <!-- Position -->
     <div class="hp">
       <div class="hp-lbl">Now Playing</div>
       <div class="pos-txt" style="color:${col}">Round ${S.roundNum}${isQ?', Q'+(S.qIdx+1):' — Intro'}</div>
       <div class="pos-sub">${esc(S.roundName)}</div>
     </div>
 
-    ${isQ ? `<!-- Timer -->
-    <div class="hp">
+    ${isQ ? `<div class="hp">
       <div class="hp-lbl">Timer</div>
       <div id="timer-val">${T.sec}</div>
       <div class="timer-row">
@@ -540,13 +646,10 @@ function renderHost() {
       </div>
     </div>
 
-    <!-- Team answers + correct answer (all hidden until Reveal is pressed) -->
     <div class="hp">
       <div class="hp-lbl">
         Team Answers
-        ${S.answerShown
-          ? ''
-          : '<span style="opacity:.4;font-size:9px;"> — hidden until you reveal</span>'}
+        ${S.answerShown?'':' <span style="opacity:.4;font-size:9px;">— hidden until you reveal</span>'}
       </div>
       ${S.teams.map((t,i)=>{
         const ans = S.answers[i]||{answer:'',submitted:false};
@@ -556,7 +659,7 @@ function renderHost() {
           : res==='wrong'
             ? `<div class="tr-result" style="background:rgba(255,82,82,.1);color:var(--red)">✗ WRONG</div>`
             : '';
-        return `<div class="team-row" style="border-color:${t.color}2A;" id="tr-${i}">
+        return `<div class="team-row" style="border-color:${t.color}2A;">
           <div class="tr-head" style="background:${t.color}12;">
             <div class="tr-nw">
               <div class="tr-dot" style="background:${t.color}"></div>
@@ -574,24 +677,22 @@ function renderHost() {
                   : `<span class="tr-ans-pending">Waiting…</span>`)}
           </div>
           ${resultBar}
-          ${S.answerShown ? `<div class="tr-btns">
+          ${S.answerShown?`<div class="tr-btns">
             <button class="btn-ok yes" onclick="addPt(${i})">✓ +1</button>
             <button class="btn-ok no"  onclick="subPt(${i})">✗ Undo</button>
-          </div>` : ''}
+          </div>`:''}
         </div>`;
       }).join('')}
-      ${localQ && S.answerShown ? `<div class="host-ans-box" style="margin-top:10px;">
+      ${localQ && S.answerShown?`<div class="host-ans-box" style="margin-top:10px;">
         <div class="host-ans-lbl">✓ Correct Answer</div>
         <div class="host-ans-txt">${esc(localQ.a)}</div>
-      </div>` : ''}
+      </div>`:''}
     </div>` : ''}
 
-    <!-- Scoreboard -->
     <div class="hp">
       <button class="btn-sb-trigger" onclick="emit('host:scoreboard')">★ Toggle Scoreboard</button>
     </div>
 
-    <!-- Keys -->
     <div class="hp">
       <div class="hp-lbl">Shortcuts</div>
       <div class="keys">
@@ -601,14 +702,13 @@ function renderHost() {
       </div>
     </div>
   `;
-
   refreshTimer();
 }
 
 function addPt(ti) { emit('host:score',{teamIdx:ti,delta:1}); }
 function subPt(ti) { emit('host:score',{teamIdx:ti,delta:-1}); }
 
-// Initial render with empty state
+// Initial render
 S = { phase:'setup', teams:[
   {name:'Team 1',members:[],score:0,color:'#00C8FF',emoji:''},
   {name:'Team 2',members:[],score:0,color:'#FF6B6B',emoji:''},
