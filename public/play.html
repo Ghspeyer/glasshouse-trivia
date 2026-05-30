@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>GlassHouse Trivia — Team View</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <script src="/socket.io/socket.io.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -332,6 +333,22 @@
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   @keyframes popIn  { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
 
+  /* Team roster card */
+  .team-roster-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    backdrop-filter: blur(6px);
+  }
+  .roster-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.38); margin-bottom: 8px; }
+  .roster-team-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .roster-emoji { font-size: 20px; line-height: 1; }
+  .roster-name { font-size: 15px; font-weight: 700; }
+  .roster-members { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .roster-member { font-size: 13px; color: rgba(255,255,255,0.65); }
+  .roster-member.is-me { color: #fff; font-weight: 700; }
+
   .hidden { display: none !important; }
 
   /* ── PLAYER NAME INPUT ──────────────────────────────────────────── */
@@ -455,7 +472,7 @@
   <!-- ════ JOIN SCREEN ════ -->
   <div id="teamSelect">
     <div class="logo-area">
-      <div class="brand">GlassHouse</div>
+      <img src="https://framerusercontent.com/images/s57APls4GZFCEILzorWpqOuQSo.png?scale-down-to=512" alt="GlassHouse" style="height:44px;width:auto;display:block;margin:0 auto 12px;">
       <h1>Trivia Night</h1>
       <p>Enter your name to join</p>
     </div>
@@ -753,7 +770,7 @@
       <div class="wc-icon">${icon}</div>
       <h2>${title}</h2>
       <p>${sub}</p>
-    </div>` + scoreStripHTML();
+    </div>` + scoreStripHTML() + teamRosterHTML();
   }
 
   function renderRoundIntro() {
@@ -772,6 +789,7 @@
         ${note}
       </div>
       ${board}
+      ${teamRosterHTML()}
     `;
   }
 
@@ -841,6 +859,7 @@
       ${resultHTML}
       ${answerSection}
       ${scoreStripHTML()}
+      ${teamRosterHTML()}
     `;
 
     if (amCaptain) {
@@ -917,6 +936,30 @@
       </div>
     `).join('');
     return `<div class="score-strip">${chips}</div>`;
+  }
+
+  function teamRosterHTML() {
+    if (!state || teamIdx === null) return '';
+    const t = state.teams[teamIdx];
+    if (!t) return '';
+    const members = (t.members || []).filter(Boolean);
+    const memberItems = members.map(m => {
+      const isCap = t.captainName && m.toLowerCase() === t.captainName.toLowerCase();
+      const isMe  = playerName && m.toLowerCase() === playerName.toLowerCase();
+      return `<span class="roster-member${isMe ? ' is-me' : ''}">` +
+        esc(m) +
+        (isCap ? `<span style="color:var(--gold)"> ★</span>` : '') +
+        (isMe  ? `<span style="color:var(--green);font-size:10px;"> (you)</span>` : '') +
+        `</span>`;
+    }).join('');
+    return `<div class="team-roster-card">
+      <div class="roster-label">YOUR TEAM</div>
+      <div class="roster-team-hdr">
+        ${t.emoji ? `<span class="roster-emoji">${t.emoji}</span>` : ''}
+        <span class="roster-name" style="color:${t.color}">${esc(t.name)}</span>
+      </div>
+      ${members.length ? `<div class="roster-members">${memberItems}</div>` : ''}
+    </div>`;
   }
 
   // ── Socket events ────────────────────────────────────────────────

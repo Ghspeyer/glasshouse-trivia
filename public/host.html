@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>GlassHouse Trivia — Host</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
@@ -248,7 +249,10 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 <body>
 
 <div id="hdr">
-  <div class="logo">Glass<em>House</em> <span style="opacity:.5;font-size:11px;font-family:Calibri,sans-serif;font-weight:normal;">HOST</span></div>
+  <div class="logo" style="display:flex;align-items:center;gap:8px;">
+    <img src="https://framerusercontent.com/images/s57APls4GZFCEILzorWpqOuQSo.png?scale-down-to=512" alt="GlassHouse" style="height:26px;width:auto;display:block;">
+    <span style="opacity:.45;font-size:10px;font-family:Calibri,sans-serif;letter-spacing:1px;">HOST</span>
+  </div>
   <div id="score-bar"></div>
   <div class="hdr-r">
     <button class="btn-hdr" onclick="openAdmin()">✏️ Questions</button>
