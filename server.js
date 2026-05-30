@@ -122,6 +122,25 @@ function getChatHistory(idx) {
   return chatHistory[idx];
 }
 
+// ── Player tracking (keyed by lowercase name for reconnect support) ──
+const activePlayers = {};
+
+function broadcastPlayers() {
+  io.to('host').emit('players:update', Object.values(activePlayers));
+}
+
+function syncTeamMembers() {
+  G.teams.forEach((t, i) => {
+    const tp = Object.values(activePlayers).filter(p => p.teamIdx === i);
+    const cap = tp.find(p => p.isCaptain);
+    t.members = [
+      ...(cap ? [cap.name] : []),
+      ...tp.filter(p => !p.isCaptain).map(p => p.name),
+    ];
+    t.captainName = cap ? cap.name : '';
+  });
+}
+
 function initState() {
   return {
     phase: 'setup',
@@ -145,7 +164,7 @@ let timerId = null;
 function key(r, q, t) { return `r${r}q${q}t${t}`; }
 
 function publicState() {
-  const r = G.phase !== 'setup' ? ROUNDS[G.round] : null;
+  const r = (G.phase !== 'setup' && G.phase !== 'lobby') ? ROUNDS[G.round] : null;
   const q = r && G.qIdx >= 0 ? r.questions[G.qIdx] : null;
 
   const ans = {}, res = {};
@@ -171,7 +190,11 @@ function publicState() {
     qDiff:          q?.d           || 0,
     aText:          (G.answerShown && q) ? q.a : '',
     answerShown:    G.answerShown,
-    teams:          G.teams.map(t => ({ name: t.name, members: t.members, score: t.score, color: t.color, emoji: t.emoji || '' })),
+    teams:          G.teams.map(t => ({
+      name: t.name, members: t.members, score: t.score,
+      color: t.color, emoji: t.emoji || '',
+      captainName: t.captainName || '',
+    })),
     answers:        ans,
     results:        res,
     scoreboardOpen: G.scoreboardOpen,
@@ -241,30 +264,103 @@ function doPrev() {
 // SOCKET.IO
 // ════════════════════════════════════════════════════════════════════════════
 io.on('connection', socket => {
+  socket.data = {};
   socket.emit('state', publicState());
   socket.emit('timer', { ...timer });
 
-  socket.on('register:host', () => socket.join('host'));
+  socket.on('register:host', () => {
+    socket.join('host');
+    socket.emit('players:update', Object.values(activePlayers));
+  });
 
-  socket.on('host:setup', teams => {
+  // ── Setup → Lobby ──────────────────────────────────────────────────────────
+  socket.on('host:createTeams', teams => {
     G = initState();
-    G.phase = 'ri';
+    G.phase = 'lobby';
     G.teams = teams.map((t, i) => ({
-      name:    t.name    || `Team ${i+1}`,
-      members: t.members || [],
-      emoji:   t.emoji   || '',
-      score:   0,
-      color:   TEAM_COLORS[i],
+      name:        t.name  || `Team ${i+1}`,
+      members:     [],
+      emoji:       t.emoji || '',
+      score:       0,
+      color:       TEAM_COLORS[i],
+      captainName: '',
     }));
+    Object.keys(activePlayers).forEach(k => delete activePlayers[k]);
     resetTimer();
     bcast();
+    broadcastPlayers();
+  });
+
+  // ── Lobby → Game ───────────────────────────────────────────────────────────
+  socket.on('host:startGame', () => {
+    if (G.phase !== 'lobby') return;
+    G.phase = 'ri';
+    bcast();
+  });
+
+  // ── Player join & reconnect ────────────────────────────────────────────────
+  socket.on('play:join', ({ name }) => {
+    const n = String(name || '').trim().slice(0, 30);
+    if (!n) return;
+    const lk = n.toLowerCase();
+    if (activePlayers[lk]) {
+      activePlayers[lk].sid = socket.id;
+    } else {
+      activePlayers[lk] = { name: n, sid: socket.id, teamIdx: null, isCaptain: false };
+    }
+    socket.data.playerKey = lk;
+    const p = activePlayers[lk];
+    if (p.teamIdx !== null) {
+      socket.emit('play:joined', { teamIdx: p.teamIdx });
+    } else {
+      socket.emit('play:waiting', {});
+    }
+    broadcastPlayers();
+  });
+
+  // ── Host: assign player to team ────────────────────────────────────────────
+  socket.on('host:assignPlayer', ({ name, teamIdx }) => {
+    const lk = String(name || '').toLowerCase();
+    if (!activePlayers[lk] || teamIdx < 0 || teamIdx >= G.teams.length) return;
+    activePlayers[lk].teamIdx = teamIdx;
+    syncTeamMembers();
+    bcast();
+    broadcastPlayers();
+    const sid = activePlayers[lk].sid;
+    if (sid) io.to(sid).emit('play:joined', { teamIdx });
+  });
+
+  // ── Host: set captain ──────────────────────────────────────────────────────
+  socket.on('host:setCaptain', ({ name, teamIdx }) => {
+    const lk = String(name || '').toLowerCase();
+    if (!activePlayers[lk] || activePlayers[lk].teamIdx !== teamIdx) return;
+    Object.values(activePlayers).forEach(p => { if (p.teamIdx === teamIdx) p.isCaptain = false; });
+    activePlayers[lk].isCaptain = true;
+    syncTeamMembers();
+    bcast();
+    broadcastPlayers();
+  });
+
+  // ── Host: remove player from team ─────────────────────────────────────────
+  socket.on('host:removePlayer', ({ name }) => {
+    const lk = String(name || '').toLowerCase();
+    if (!activePlayers[lk]) return;
+    activePlayers[lk].teamIdx = null;
+    activePlayers[lk].isCaptain = false;
+    syncTeamMembers();
+    bcast();
+    broadcastPlayers();
+    const sid = activePlayers[lk].sid;
+    if (sid) io.to(sid).emit('play:waiting', {});
   });
 
   socket.on('host:restart', () => {
     G = initState();
     resetTimer();
     Object.keys(chatHistory).forEach(k => delete chatHistory[k]);
+    Object.keys(activePlayers).forEach(k => delete activePlayers[k]);
     bcast();
+    broadcastPlayers();
   });
 
   socket.on('host:next',   doNext);
@@ -272,7 +368,7 @@ io.on('connection', socket => {
 
   socket.on('host:reveal', () => {
     G.answerShown = !G.answerShown;
-    if (G.answerShown) stopTimer(); // freeze timer the moment answer is shown
+    if (G.answerShown) stopTimer();
     bcast();
   });
 
@@ -350,6 +446,14 @@ io.on('connection', socket => {
     G.answers[k]   = answer;
     G.submitted[k] = true;
     bcast();
+  });
+
+  socket.on('disconnect', () => {
+    const lk = socket.data?.playerKey;
+    if (lk && activePlayers[lk]) {
+      activePlayers[lk].sid = null;
+      broadcastPlayers();
+    }
   });
 });
 

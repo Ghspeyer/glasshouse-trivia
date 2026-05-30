@@ -77,7 +77,7 @@
 
   /* ── GAME VIEW ────────────────────────────────────────────────── */
   #gameView { display: none; flex-direction: column; min-height: 100vh; }
-  .play-body { flex: 1; display: flex; max-width: 820px; margin: 0 auto; width: 100%; }
+  .play-body { flex: 1; display: flex; max-width: 860px; margin: 0 auto; width: 100%; }
 
   /* Header */
   .play-header {
@@ -120,34 +120,9 @@
     padding: 20px 16px 280px; gap: 16px;
     min-width: 0;
   }
-
-  /* Standings sidebar — hidden on mobile, visible on wider screens */
-  .standings-panel { display: none; }
   @media (min-width: 700px) {
-    .standings-panel {
-      display: block; width: 190px; flex-shrink: 0;
-      padding: 20px 0 280px 16px; overflow-y: auto;
-    }
+    .play-main { padding-bottom: 20px; }
   }
-  .standings-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; overflow: hidden; position: sticky; top: 20px;
-  }
-  .standings-hdr {
-    padding: 10px 14px 8px; font-size: 10px; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--cyan); font-weight: 700;
-    border-bottom: 1px solid var(--border);
-  }
-  .standings-row {
-    display: flex; align-items: center; gap: 8px;
-    padding: 9px 12px; font-size: 13px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-  }
-  .standings-row:last-child { border-bottom: none; }
-  .standings-row.is-my-team { background: rgba(255,255,255,0.05); }
-  .standings-rank { font-size: 15px; width: 22px; flex-shrink: 0; text-align: center; }
-  .standings-name { flex: 1; font-weight: 600; color: #fff; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .standings-pts  { font-weight: 800; font-size: 15px; flex-shrink: 0; }
 
   /* Auto-assign button */
   .auto-assign-btn {
@@ -377,6 +352,8 @@
   .player-name-input:focus { border-color: var(--cyan); }
 
   /* ── TEAM CHAT PANEL ─────────────────────────────────────────────── */
+
+  /* Mobile: fixed bar at bottom */
   #chatPanel {
     position: fixed; bottom: 0; left: 0; right: 0;
     background: rgba(5,11,20,0.97);
@@ -388,8 +365,34 @@
     box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
   }
   #chatPanel.hidden  { display: none !important; }
-  #chatPanel.collapsed { max-height: none; }
   #chatPanel.collapsed #chatBody { display: none; }
+
+  /* Desktop: static sidebar with full height */
+  @media (min-width: 700px) {
+    #chatPanel {
+      position: sticky;
+      top: 60px; /* sits below the sticky header */
+      align-self: flex-start;
+      bottom: auto; left: auto; right: auto;
+      width: 280px; flex-shrink: 0;
+      height: calc(100vh - 60px);
+      max-height: none;
+      border-top: none;
+      border-left: 1px solid var(--border);
+      box-shadow: none;
+      background: rgba(8,18,31,0.95);
+      z-index: 10;
+      overflow: hidden;
+    }
+    #chatPanel.collapsed #chatBody { display: flex; } /* never collapse on desktop */
+    .chat-toggle-icon { display: none; }
+    .chat-header { cursor: default; }
+    #chatBody {
+      flex: 1; overflow: hidden; min-height: 0;
+      display: flex; flex-direction: column;
+    }
+    .chat-messages { flex: 1; overflow-y: auto; }
+  }
 
   .chat-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -449,39 +452,19 @@
 <body>
 <div id="app">
 
-  <!-- ════ TEAM SELECTION ════ -->
+  <!-- ════ JOIN SCREEN ════ -->
   <div id="teamSelect">
     <div class="logo-area">
       <div class="brand">GlassHouse</div>
       <h1>Trivia Night</h1>
-      <p>Select your team to join</p>
+      <p>Enter your name to join</p>
     </div>
     <div class="name-input-wrap">
       <input type="text" id="playerNameInput" class="player-name-input"
-        placeholder="Your name (shown in team chat)" maxlength="30" autocomplete="off">
+        placeholder="Your name" maxlength="30" autocomplete="off">
     </div>
-    <div class="team-grid" id="teamGrid"></div>
-  </div>
-
-  <!-- ════ TEAM CHAT PANEL ════ -->
-  <div id="chatPanel" class="hidden">
-    <div class="chat-header" id="chatHeader">
-      <div class="chat-header-left">
-        💬&nbsp;<span class="chat-title" id="chatTitle">Team Chat</span>
-        <span class="chat-unread-badge hidden" id="chatUnread"></span>
-      </div>
-      <span class="chat-toggle-icon" id="chatToggleIcon">▼</span>
-    </div>
-    <div id="chatBody">
-      <div class="chat-messages" id="chatMessages">
-        <div class="chat-empty">Say something to get started!</div>
-      </div>
-      <div class="chat-input-row">
-        <input class="chat-input" id="chatInput" type="text"
-          placeholder="Message your team…" maxlength="200" autocomplete="off">
-        <button class="chat-send-btn" id="chatSendBtn">↑</button>
-      </div>
-    </div>
+    <button class="auto-assign-btn" id="joinBtn">Join Game</button>
+    <div id="joinStatus" style="font-size:13px;color:rgba(255,255,255,0.45);text-align:center;min-height:20px;"></div>
   </div>
 
   <!-- ════ GAME VIEW ════ -->
@@ -494,12 +477,33 @@
         <span id="headerTeamName">Your Team</span>
       </div>
       <div class="timer-pill" id="timerDisplay">–</div>
-      <button class="change-team-btn" id="changeTeamBtn">Change</button>
+      <button class="change-team-btn" id="changeTeamBtn">← Back</button>
     </div>
 
     <div class="play-body">
       <div class="play-main" id="mainContent"></div>
-      <div class="standings-panel" id="standingsPanel"></div>
+
+      <!-- Chat panel lives here as a sidebar on desktop, fixed bottom on mobile -->
+      <div id="chatPanel" class="hidden">
+        <div class="chat-header" id="chatHeader">
+          <div class="chat-header-left">
+            💬&nbsp;<span class="chat-title" id="chatTitle">Team Chat</span>
+            <span class="chat-unread-badge hidden" id="chatUnread"></span>
+          </div>
+          <span class="chat-toggle-icon" id="chatToggleIcon">▼</span>
+        </div>
+        <div id="chatBody">
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-empty">Say something to get started!</div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="chatInput" type="text"
+              placeholder="Message your team…" maxlength="200" autocomplete="off">
+            <button class="chat-send-btn" id="chatSendBtn">↑</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -509,9 +513,10 @@
 (function() {
   const socket = io();
 
-  let state   = null;
-  let timer   = { sec: 30, running: false };
-  let teamIdx = null;
+  let state         = null;
+  let timer         = { sec: 30, running: false };
+  let teamIdx       = null;
+  let playerJoined  = false; // true once play:join emitted this session
 
   // ── Chat ─────────────────────────────────────────────────────────
   let playerName    = (localStorage.getItem('gh_name') || '').trim();
@@ -612,33 +617,42 @@
   function clearTeam()   { localStorage.removeItem('gh_team'); teamIdx = null; chatJoined = -1; }
 
   // ── DOM refs ─────────────────────────────────────────────────────
-  const $teamSelect = document.getElementById('teamSelect');
-  const $gameView   = document.getElementById('gameView');
-  const $teamGrid   = document.getElementById('teamGrid');
-  const $main       = document.getElementById('mainContent');
-  const $timer      = document.getElementById('timerDisplay');
-  const $headerDot  = document.getElementById('headerDot');
-  const $headerName = document.getElementById('headerTeamName');
-  const $headerEmoji= document.getElementById('headerEmoji');
+  const $teamSelect  = document.getElementById('teamSelect');
+  const $gameView    = document.getElementById('gameView');
+  const $main        = document.getElementById('mainContent');
+  const $timer       = document.getElementById('timerDisplay');
+  const $headerDot   = document.getElementById('headerDot');
+  const $headerName  = document.getElementById('headerTeamName');
+  const $headerEmoji = document.getElementById('headerEmoji');
+  const $joinStatus  = document.getElementById('joinStatus');
 
-  const $chatPanel  = document.getElementById('chatPanel');
-  const $chatMsgs   = document.getElementById('chatMessages');
-  const $chatInput  = document.getElementById('chatInput');
-  const $chatUnread = document.getElementById('chatUnread');
-  const $chatToggle = document.getElementById('chatToggleIcon');
-  const $chatTitle  = document.getElementById('chatTitle');
+  const $chatPanel   = document.getElementById('chatPanel');
+  const $chatMsgs    = document.getElementById('chatMessages');
+  const $chatInput   = document.getElementById('chatInput');
+  const $chatUnread  = document.getElementById('chatUnread');
+  const $chatToggle  = document.getElementById('chatToggleIcon');
+  const $chatTitle   = document.getElementById('chatTitle');
 
   document.getElementById('changeTeamBtn').addEventListener('click', () => {
-    clearTeam(); showTeamSelect();
+    clearTeam(); playerJoined = false; showJoinScreen();
   });
 
   // ── View switching ───────────────────────────────────────────────
-  function showTeamSelect() {
+  function showJoinScreen() {
     $teamSelect.style.display = 'flex';
     $gameView.style.display   = 'none';
     $chatPanel.classList.add('hidden');
-    renderTeamSelect();
+    $joinStatus.textContent = '';
+    document.getElementById('playerNameInput').value = playerName;
   }
+
+  function showWaiting() {
+    $teamSelect.style.display = 'flex';
+    $gameView.style.display   = 'none';
+    $chatPanel.classList.add('hidden');
+    $joinStatus.textContent = '⏳ Waiting for the host to assign your team…';
+  }
+
   function showGame() {
     $teamSelect.style.display = 'none';
     $gameView.style.display   = 'flex';
@@ -646,58 +660,6 @@
     updateHeader();
     joinTeamChat();
     render();
-  }
-
-  // ── Team selection ───────────────────────────────────────────────
-  function renderTeamSelect() {
-    if (!state || !state.teams || state.teams.length === 0) {
-      $teamGrid.innerHTML = `
-        <div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:14px;">
-          Waiting for the host to start the game…
-        </div>`;
-      return;
-    }
-    $teamGrid.innerHTML = '';
-    const autoIdx = findTeamByName(playerName);
-
-    // Auto-join banner when name matches a team
-    if (autoIdx !== null) {
-      const autoTeam = state.teams[autoIdx];
-      const banner = document.createElement('div');
-      banner.style.cssText = 'grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:8px;';
-      const joinBtn = document.createElement('button');
-      joinBtn.className = 'auto-assign-btn';
-      joinBtn.textContent = `✓ Join ${autoTeam.name}${autoTeam.emoji ? ' ' + autoTeam.emoji : ''}`;
-      joinBtn.addEventListener('click', () => {
-        unlockAudio(); teamIdx = autoIdx; saveTeam(autoIdx); showGame();
-      });
-      const note = document.createElement('p');
-      note.className = 'auto-assign-note';
-      note.textContent = 'Your name matches this team — or pick any team below';
-      banner.appendChild(joinBtn);
-      banner.appendChild(note);
-      $teamGrid.appendChild(banner);
-    }
-
-    state.teams.forEach((team, i) => {
-      const isMyTeam = autoIdx === i;
-      const btn = document.createElement('button');
-      btn.className = 'team-btn' + (isMyTeam ? ' is-my-team' : '');
-      btn.style.borderColor = team.color;
-      btn.style.boxShadow = isMyTeam ? `0 0 22px ${team.color}55` : `0 0 16px ${team.color}22`;
-      const members = team.members && team.members.length ? team.members.join(', ') : '';
-      btn.innerHTML = `
-        ${team.emoji ? `<div class="t-emoji">${team.emoji}</div>` : ''}
-        <div class="t-color-bar" style="background:${team.color}"></div>
-        <div class="t-name">${esc(team.name)}</div>
-        ${members ? `<div class="t-members">${esc(members)}</div>` : ''}
-        ${isMyTeam ? '<div class="my-team-badge">Your Team ✓</div>' : ''}
-      `;
-      btn.addEventListener('click', () => {
-        unlockAudio(); teamIdx = i; saveTeam(i); showGame();
-      });
-      $teamGrid.appendChild(btn);
-    });
   }
 
   // ── Header ───────────────────────────────────────────────────────
@@ -767,54 +729,23 @@
     $chatInput.value = '';
   }
 
-  // ── Standings ─────────────────────────────────────────────────────
-  function renderStandings() {
-    const panel = document.getElementById('standingsPanel');
-    if (!panel) return;
-    if (!state || !state.teams || state.teams.length === 0 || state.phase === 'setup') {
-      panel.innerHTML = ''; return;
-    }
-    const sorted = [...state.teams].map((t, i) => ({ ...t, _i: i })).sort((a, b) => b.score - a.score);
-    const medals = ['🥇','🥈','🥉'];
-    panel.innerHTML = `<div class="standings-card">
-      <div class="standings-hdr">📊 Standings</div>
-      ${sorted.map((t, rank) => `
-        <div class="standings-row${t._i === teamIdx ? ' is-my-team' : ''}">
-          <span class="standings-rank">${medals[rank] || (rank + 1)}</span>
-          <span class="standings-name">${t.emoji ? t.emoji + ' ' : ''}${esc(t.name)}</span>
-          <span class="standings-pts" style="color:${t.color}">${t.score}</span>
-        </div>`).join('')}
-    </div>`;
-  }
-
-  // ── Captain / leader check ────────────────────────────────────────
+  // ── Captain check ────────────────────────────────────────────────
   function isCaptain() {
     if (!state || teamIdx === null) return true;
     const t = state.teams[teamIdx];
-    if (!t || !t.members || !t.members[0]) return true; // no captain set → everyone submits
+    if (!t || !t.captainName) return true; // no captain set → everyone submits
     if (!playerName) return false;
-    return playerName.toLowerCase() === t.members[0].toLowerCase();
-  }
-
-  // ── Auto-assign by name ───────────────────────────────────────────
-  function findTeamByName(name) {
-    if (!state || !state.teams || !name) return null;
-    const lower = name.toLowerCase();
-    for (let i = 0; i < state.teams.length; i++) {
-      if ((state.teams[i].members || []).some(m => m.toLowerCase() === lower)) return i;
-    }
-    return null;
+    return playerName.toLowerCase() === t.captainName.toLowerCase();
   }
 
   // ── Main render ──────────────────────────────────────────────────
   function render() {
     if (!state || teamIdx === null) return;
-    if (state.phase === 'setup') {
+    if (state.phase === 'setup' || state.phase === 'lobby') {
       $main.innerHTML = waitingHTML('⏳', 'Game Starting Soon', 'The host is setting things up. Hang tight!');
     } else if (state.phase === 'final') { renderFinal(); }
     else if (state.phase === 'ri')      { renderRoundIntro(); }
     else if (state.phase === 'q')       { renderQuestion(); }
-    renderStandings();
   }
 
   function waitingHTML(icon, title, sub) {
@@ -866,7 +797,7 @@
     if (myResult === 'correct') resultHTML = `<div class="result-banner correct">✓ Correct! +1 point</div>`;
     else if (myResult === 'wrong') resultHTML = `<div class="result-banner wrong">✗ Not this time</div>`;
 
-    const captain    = state.teams[teamIdx]?.members?.[0] || '';
+    const captain    = state.teams[teamIdx]?.captainName || '';
     const amCaptain  = isCaptain();
 
     const answerSection = amCaptain
@@ -992,12 +923,24 @@
   socket.on('state', s => {
     state = s;
 
+    // If game was restarted and our team slot vanished, go back to join
     if (teamIdx !== null && (!s.teams || !s.teams[teamIdx])) {
-      clearTeam(); showTeamSelect(); return;
+      clearTeam(); playerJoined = false; showJoinScreen(); return;
     }
 
-    if (teamIdx === null) { showTeamSelect(); }
-    else { updateHeader(); joinTeamChat(); render(); }
+    if (teamIdx !== null) { updateHeader(); joinTeamChat(); render(); }
+    // else: player is on join/waiting screen — leave them there
+  });
+
+  socket.on('play:joined', ({ teamIdx: idx }) => {
+    teamIdx = idx;
+    saveTeam(idx);
+    chatJoined = -1; // force chat re-join for new team
+    showGame();
+  });
+
+  socket.on('play:waiting', () => {
+    showWaiting();
   });
 
   socket.on('chat:history', history => {
@@ -1045,16 +988,38 @@
   $nameIn.addEventListener('input', () => {
     playerName = $nameIn.value.trim();
     localStorage.setItem('gh_name', playerName);
-    // Live-update team grid so matching team highlights immediately
-    if ($teamSelect.style.display !== 'none') renderTeamSelect();
   });
+  $nameIn.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); doJoin(); }
+  });
+
+  // ── Join button ──────────────────────────────────────────────────
+  function doJoin() {
+    const name = $nameIn.value.trim();
+    if (!name) { $joinStatus.textContent = 'Please enter your name first.'; return; }
+    playerName = name;
+    localStorage.setItem('gh_name', name);
+    unlockAudio();
+    socket.emit('play:join', { name });
+    playerJoined = true;
+    $joinStatus.textContent = '⏳ Joining…';
+  }
+  document.getElementById('joinBtn').addEventListener('click', doJoin);
 
   // ── Init ─────────────────────────────────────────────────────────
   teamIdx = loadTeam();
-  if (teamIdx !== null) {
-    $teamSelect.style.display = 'none';
-    $gameView.style.display   = 'flex';
-    $chatPanel.classList.remove('hidden');
+  // Auto-reconnect: if name is stored, re-emit play:join immediately
+  if (playerName) {
+    socket.emit('play:join', { name: playerName });
+    playerJoined = true;
+    if (teamIdx !== null) {
+      // Optimistic: show game right away; server will confirm or correct
+      showGame();
+    } else {
+      showWaiting();
+    }
+  } else {
+    showJoinScreen();
   }
 
   // ── Utils ────────────────────────────────────────────────────────

@@ -161,6 +161,32 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .admin-rname-input:focus { outline:none; border-color:rgba(0,200,255,.4); }
 .tc-captain-lbl { font-size:9px; background:rgba(255,215,0,.12); color:var(--gold); padding:1px 5px; border-radius:3px; letter-spacing:.5px; margin-left:4px; }
 
+/* ── Lobby ── */
+#lobby-screen { position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding:16px 20px; overflow-y:auto; }
+.lobby-wrap { width:100%; max-width:920px; padding-bottom:20px; }
+.lobby-pool { background:var(--nav3); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:12px 16px; margin-bottom:14px; }
+.lobby-section-title { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--dim2); margin-bottom:10px; }
+.lobby-player-row { display:flex; align-items:center; gap:6px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.04); flex-wrap:wrap; }
+.lobby-player-row:last-child { border-bottom:none; }
+.lobby-pname { font-size:13px; font-weight:600; min-width:100px; }
+.lobby-pname.offline { opacity:.35; font-style:italic; }
+.lobby-assign-btn { padding:4px 9px; border-radius:4px; border:1px solid; background:transparent; font-size:11px; cursor:pointer; white-space:nowrap; transition:all .12s; flex-shrink:0; }
+.lobby-assign-btn:hover { filter:brightness(1.3); background:rgba(255,255,255,.05); }
+.lobby-empty { font-size:12px; color:var(--dim2); font-style:italic; padding:4px 0; }
+.lobby-teams { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px; }
+.lobby-team-col { background:var(--nav3); border:1.5px solid; border-radius:8px; padding:10px; min-height:80px; }
+.lobby-team-hdr { font-family:'Arial Black',Arial,sans-serif; font-size:11px; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid rgba(255,255,255,.07); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lobby-member-row { display:flex; align-items:center; gap:3px; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+.lobby-member-row:last-child { border-bottom:none; }
+.lobby-mname { flex:1; font-size:12px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lobby-mname.offline { opacity:.35; font-style:italic; }
+.lobby-cap-btn { width:22px; height:22px; border:none; background:transparent; color:var(--dim2); font-size:13px; cursor:pointer; padding:0; border-radius:3px; flex-shrink:0; line-height:1; }
+.lobby-cap-btn:hover { color:var(--gold); background:rgba(255,215,0,.08); }
+.lobby-cap-btn.active { color:var(--gold); }
+.lobby-remove-btn { width:20px; height:20px; border:none; background:transparent; color:rgba(255,82,82,.4); font-size:11px; cursor:pointer; padding:0; border-radius:3px; flex-shrink:0; line-height:1; }
+.lobby-remove-btn:hover { color:var(--red); background:rgba(255,82,82,.08); }
+.lobby-empty-team { font-size:11px; color:var(--dim2); font-style:italic; padding:4px 0; }
+
 /* ── Host sidebar ── */
 .hp { padding:11px 14px; border-bottom:1px solid rgba(255,255,255,.05); flex-shrink:0; }
 .hp:last-child { border-bottom:none; }
@@ -347,7 +373,7 @@ socket.on('timer', t => { T = t; refreshTimer(); });
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  if (!S || S.phase === 'setup') return;
+  if (!S || S.phase === 'setup' || S.phase === 'lobby') return;
   switch(e.key) {
     case ' ': case 'ArrowRight': e.preventDefault(); emit('host:next'); break;
     case 'ArrowLeft':            e.preventDefault(); emit('host:prev'); break;
@@ -558,7 +584,7 @@ function render() {
 }
 
 function renderScoreBar() {
-  if (!S || S.phase==='setup') { document.getElementById('score-bar').innerHTML=''; return; }
+  if (!S || S.phase==='setup' || S.phase==='lobby') { document.getElementById('score-bar').innerHTML=''; return; }
   document.getElementById('score-bar').innerHTML = S.teams.map((t,i)=>`
     <div class="sc-chip" style="color:${t.color};border-color:${t.color}44;">
       <div class="sc-n">${t.emoji?t.emoji+' ':''}${esc(t.name)}</div>
@@ -579,6 +605,7 @@ function renderDisplay() {
   const el = document.getElementById('display');
   if (!S) return;
   if (S.phase==='setup') { el.innerHTML=renderSetup(); bindSetup(); return; }
+  if (S.phase==='lobby') { el.innerHTML=renderLobby(); bindLobby(); return; }
   if (S.phase==='ri')    { el.innerHTML=renderRI(); return; }
   if (S.phase==='q')     { el.innerHTML=renderQ(); return; }
   if (S.phase==='final') { el.innerHTML=renderFinal(); return; }
@@ -586,7 +613,7 @@ function renderDisplay() {
 
 function renderSetup() {
   return `<div id="setup-screen"><div class="sw">
-    <div class="sh"><h1>TRIVIA NIGHT</h1><p>GlassHouse · Q2 2026 · Enter team names, mascots &amp; members</p></div>
+    <div class="sh"><h1>TRIVIA NIGHT</h1><p>GlassHouse · Q2 2026 · Set team names &amp; mascots, then assign players in the lobby</p></div>
     <div class="tc-grid">
       ${[0,1,2,3].map(i=>`
         <div class="tc" style="border-color:${TEAM_COLORS[i]}44;">
@@ -603,14 +630,10 @@ function renderSetup() {
                 ${EMOJI_PRESETS.map(e=>`<button class="ep" onclick="pickEmoji(${i},'${e}')">${e}</button>`).join('')}
               </div>
             </div>
-            <div class="tc-lbl">Team Members <span class="tc-captain-lbl">★ CAPTAIN</span></div>
-            <div class="tc-mems">
-              ${[0,1,2,3,4].map(m=>`<input id="tm-${i}-${m}" type="text" placeholder="${m===0?'Team Captain (submits answers)':'Member '+(m+1)}" maxlength="30"/>`).join('')}
-            </div>
           </div>
         </div>`).join('')}
     </div>
-    <button class="btn-start" id="btn-start">START GAME ▶</button>
+    <button class="btn-start" id="btn-start">OPEN LOBBY →</button>
   </div></div>`;
 }
 
@@ -622,11 +645,10 @@ function pickEmoji(teamIdx, emoji) {
 function bindSetup() {
   document.getElementById('btn-start').onclick = () => {
     const teams = [0,1,2,3].map(i=>({
-      name:    document.getElementById(`tn-${i}`).value.trim()||`Team ${i+1}`,
-      emoji:   document.getElementById(`te-${i}`).value.trim()||'',
-      members: [0,1,2,3,4].map(m=>document.getElementById(`tm-${i}-${m}`).value.trim()).filter(Boolean),
+      name:  document.getElementById(`tn-${i}`).value.trim()||`Team ${i+1}`,
+      emoji: document.getElementById(`te-${i}`).value.trim()||'',
     }));
-    emit('host:setup', teams);
+    emit('host:createTeams', teams);
   };
 }
 
@@ -694,7 +716,7 @@ function renderFinal() {
 
 function renderHost() {
   const el = document.getElementById('host');
-  if (!S || S.phase==='setup' || S.phase==='final') { el.innerHTML=''; return; }
+  if (!S || S.phase==='setup' || S.phase==='lobby' || S.phase==='final') { el.innerHTML=''; return; }
   const isQ = S.phase==='q';
   const col = S.roundColor;
   const localQ = isQ ? ROUNDS[S.round]?.questions[S.qIdx] : null;
@@ -793,6 +815,76 @@ function renderHost() {
 
 function addPt(ti) { emit('host:score',{teamIdx:ti,delta:1}); }
 function subPt(ti) { emit('host:score',{teamIdx:ti,delta:-1}); }
+
+// ── Lobby ─────────────────────────────────────────────────────────────────
+let players = [];
+
+socket.on('players:update', p => {
+  players = p;
+  if (S && S.phase === 'lobby') {
+    document.getElementById('display').innerHTML = renderLobby();
+    bindLobby();
+  }
+});
+
+function renderLobby() {
+  const unassigned = players.filter(p => p.teamIdx === null);
+  const teams = S ? S.teams : [];
+
+  return `<div id="lobby-screen"><div class="lobby-wrap">
+    <div class="sh">
+      <h1 style="font-size:24px;">PLAYER ASSIGNMENT</h1>
+      <p>Players join at the link below · Assign them to teams · Designate a captain per team</p>
+    </div>
+
+    <div class="lobby-pool">
+      <div class="lobby-section-title">WAITING TO JOIN (${unassigned.length})</div>
+      ${unassigned.length === 0
+        ? '<div class="lobby-empty">No unassigned players yet — share the /play link!</div>'
+        : unassigned.map(p => `
+          <div class="lobby-player-row">
+            <span class="lobby-pname ${!p.sid ? 'offline' : ''}">${esc(p.name)}${!p.sid ? ' (offline)' : ''}</span>
+            ${teams.map((t, i) => `
+              <button class="lobby-assign-btn" style="border-color:${t.color};color:${t.color};"
+                onclick="assignPlayer(${esc(JSON.stringify(p.name))}, ${i})">
+                → ${esc(t.name)}
+              </button>`).join('')}
+          </div>`).join('')}
+    </div>
+
+    <div class="lobby-teams">
+      ${teams.map((t, i) => {
+        const tp = players.filter(p => p.teamIdx === i);
+        return `<div class="lobby-team-col" style="border-color:${t.color}44;">
+          <div class="lobby-team-hdr" style="color:${t.color}">
+            ${t.emoji || ''} ${esc(t.name)} <span style="opacity:.5;font-weight:normal;">(${tp.length})</span>
+          </div>
+          ${tp.length === 0
+            ? '<div class="lobby-empty-team">Empty</div>'
+            : tp.map(p => `
+              <div class="lobby-member-row">
+                <span class="lobby-mname ${!p.sid ? 'offline' : ''}">${esc(p.name)}</span>
+                <button class="lobby-cap-btn ${p.isCaptain ? 'active' : ''}"
+                  onclick="setCaptain(${esc(JSON.stringify(p.name))}, ${i})" title="Make Captain">★</button>
+                <button class="lobby-remove-btn"
+                  onclick="removePlayer(${esc(JSON.stringify(p.name))})" title="Remove from team">✕</button>
+              </div>`).join('')}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <button class="btn-start" id="btn-start-game">START GAME ▶</button>
+  </div></div>`;
+}
+
+function bindLobby() {
+  const btn = document.getElementById('btn-start-game');
+  if (btn) btn.onclick = () => emit('host:startGame');
+}
+
+function assignPlayer(name, teamIdx) { emit('host:assignPlayer', { name, teamIdx }); }
+function setCaptain(name, teamIdx)   { emit('host:setCaptain',   { name, teamIdx }); }
+function removePlayer(name)          { emit('host:removePlayer', { name }); }
 
 // Initial render
 S = { phase:'setup', teams:[
