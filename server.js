@@ -445,6 +445,10 @@ io.on('connection', socket => {
     if (ROUNDS[roundIdx]) { ROUNDS[roundIdx].name = name; bcast(); }
   });
 
+  socket.on('host:setRoundNote', ({ roundIdx, note }) => {
+    if (ROUNDS[roundIdx]) { ROUNDS[roundIdx].note = String(note || '').slice(0, 500); bcast(); }
+  });
+
   socket.on('chat:join', (idx) => {
     [...socket.rooms].filter(r => r.startsWith('chat:')).forEach(r => socket.leave(r));
     socket.join('chat:' + idx);

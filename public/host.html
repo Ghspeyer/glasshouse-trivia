@@ -458,6 +458,10 @@ function renderAdminQuestions() {
          onclick="setRoundTimed(${ri}, ${round.timed !== false ? 'false' : 'true'})">
          ${round.timed !== false ? '⏱ Timed' : '⏱ No Timer'}
        </button>
+     </div>
+     <div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:10px;">
+       <textarea class="admin-ta" id="aq-note" rows="2" placeholder="Subtitle / note shown on round intro slide (optional)" style="flex:1;">${escAttr(round.note||'')}</textarea>
+       <button class="btn-admin-save" style="flex-shrink:0;margin-top:0;" onclick="saveRoundNote(${ri})">Save</button>
      </div>` +
     round.questions.map((q, qi) => `
       <div class="admin-q-card">
@@ -522,6 +526,14 @@ function saveRoundName(ri) {
   ROUNDS[ri].name = name;
   emit('host:renameRound', { roundIdx: ri, name });
   renderAdminSidebar();
+}
+
+function saveRoundNote(ri) {
+  const el = document.getElementById('aq-note');
+  if (!el) return;
+  const note = el.value.trim();
+  ROUNDS[ri].note = note;
+  emit('host:setRoundNote', { roundIdx: ri, note });
 }
 
 function setRoundTimed(ri, val) {
