@@ -93,7 +93,6 @@
   }
   @media (max-width: 699px) {
     .header-scores { order: 3; flex: 0 0 100%; justify-content: center; }
-    .change-team-btn { margin-left: auto; }
   }
   .play-header .team-chip {
     display: flex; align-items: center; gap: 8px;
@@ -101,13 +100,6 @@
   }
   .team-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .team-emoji-hdr { font-size: 18px; line-height: 1; }
-  .change-team-btn {
-    background: none; border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.45); font-size: 11px;
-    padding: 3px 8px; border-radius: 6px; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .change-team-btn:active { background: rgba(255,255,255,0.1); }
 
   /* Timer pill */
   .timer-pill {
@@ -397,7 +389,6 @@
       width: 100%; flex-shrink: 0;
       max-height: 300px;
     }
-    #chatPanel.collapsed #chatBody { display: none; }
   }
 
   /* Desktop: sticky sidebar, full height */
@@ -413,15 +404,14 @@
       border-left: 1px solid var(--border);
       overflow: hidden;
     }
-    #chatPanel.collapsed #chatBody { display: flex; }
-    .chat-toggle-icon { display: none; }
-    .chat-header { cursor: default; }
     #chatBody {
       flex: 1; overflow: hidden; min-height: 0;
       display: flex; flex-direction: column;
     }
     .chat-messages { flex: 1; overflow-y: auto; }
   }
+  .chat-toggle-icon { display: none; }
+  .chat-header { cursor: default; }
 
   .chat-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -510,7 +500,6 @@
         <span id="headerTeamName">Your Team</span>
       </div>
       <div id="headerScores" class="header-scores"></div>
-      <button class="change-team-btn" id="changeTeamBtn">← Back</button>
     </div>
 
     <div class="play-body">
@@ -523,7 +512,6 @@
             💬&nbsp;<span class="chat-title" id="chatTitle">Team Chat</span>
             <span class="chat-unread-badge hidden" id="chatUnread"></span>
           </div>
-          <span class="chat-toggle-icon" id="chatToggleIcon">▼</span>
         </div>
         <div id="chatBody">
           <div class="chat-messages" id="chatMessages">
@@ -554,7 +542,6 @@
   // ── Chat ─────────────────────────────────────────────────────────
   let playerName    = (localStorage.getItem('gh_name') || '').trim();
   let chatJoined    = -1;
-  let chatCollapsed = false;
   let chatUnreadCt  = 0;
 
   // ── State ────────────────────────────────────────────────────────
@@ -580,12 +567,8 @@
   const $chatMsgs    = document.getElementById('chatMessages');
   const $chatInput   = document.getElementById('chatInput');
   const $chatUnread  = document.getElementById('chatUnread');
-  const $chatToggle  = document.getElementById('chatToggleIcon');
-  const $chatTitle   = document.getElementById('chatTitle');
 
-  document.getElementById('changeTeamBtn').addEventListener('click', () => {
-    clearTeam(); playerJoined = false; showJoinScreen();
-  });
+  const $chatTitle   = document.getElementById('chatTitle');
 
   // ── View switching ───────────────────────────────────────────────
   function showJoinScreen() {
@@ -663,12 +646,6 @@
     $chatTitle.style.color = t.color;
   }
 
-  function toggleChat() {
-    chatCollapsed = !chatCollapsed;
-    $chatPanel.classList.toggle('collapsed', chatCollapsed);
-    $chatToggle.textContent = chatCollapsed ? '▲' : '▼';
-    if (!chatCollapsed) { chatUnreadCt = 0; renderUnread(); scrollChat(); }
-  }
 
   function renderUnread() {
     if (chatUnreadCt > 0) {
@@ -962,7 +939,7 @@
     const isMe = !!(playerName && entry.name === playerName);
     addMsgEl(entry, isMe);
     scrollChat();
-    if (chatCollapsed && !isMe) { chatUnreadCt++; renderUnread(); }
+    if (!isMe) { chatUnreadCt++; renderUnread(); }
   });
 
   socket.on('chat:broadcast', entry => {
@@ -977,7 +954,6 @@
   });
 
   // ── Chat event listeners ─────────────────────────────────────────
-  document.getElementById('chatHeader').addEventListener('click', toggleChat);
   document.getElementById('chatSendBtn').addEventListener('click', sendChat);
   $chatInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
