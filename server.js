@@ -22,7 +22,7 @@ const ROUNDS = [
       { q: 'What is the capital city of Australia?', a: 'Canberra', d: 1 },
       { q: 'How many colors are in a standard rainbow?', a: '7 (red, orange, yellow, green, blue, indigo, violet)', d: 1 },
       { q: 'The world\'s longest river flows northward through multiple countries before emptying into the Mediterranean Sea. Name it.', a: 'The Nile', d: 2 },
-      { q: 'Named after the Greek god of the Sun, this element is the second lightest in the universe and makes your voice sound squeaky when inhaled. Name it.', a: 'Helium', d: 2 },
+      { q: 'The only metal that remains liquid at room temperature, this element carries the chemical symbol Hg — derived from its Latin name "Hydrargyrum," meaning liquid silver. Name it.', a: 'Mercury', d: 2 },
       { q: 'Standing at 19,341 feet in East Africa, this dormant stratovolcano is the tallest free-standing mountain on Earth and the highest point on the African continent. Name it.', a: 'Mount Kilimanjaro', d: 3 },
     ]
   },
@@ -33,7 +33,7 @@ const ROUNDS = [
       { q: 'The Black Death of the 14th century killed approximately what fraction of Europe\'s population? (Accept a range)', a: 'One-third to one-half (30–60%)', d: 1 },
       { q: 'Sealed at a meadow called Runnymede in 1215, this landmark royal charter was one of the first documents to establish limits on a king\'s power. What was it called?', a: 'The Magna Carta', d: 2 },
       { q: 'Starting with the Bill of Rights in 1791, the U.S. Constitution has been amended over more than two centuries. How many amendments does it currently have?', a: '27 amendments', d: 2 },
-      { q: 'When the Germanic chieftain Odoacer deposed the last emperor Romulus Augustulus, historians mark this as the official end of what ancient empire?', a: 'The Western Roman Empire (476 AD)', d: 3 },
+      { q: 'This warrior queen of the Iceni tribe launched a fierce revolt against Roman occupation of Britain around 60 AD — torching several Roman settlements including Londinium before her forces were ultimately defeated. Name her.', a: 'Boudica (also accepted: Boudicca)', d: 3 },
     ]
   },
   {
@@ -54,17 +54,17 @@ const ROUNDS = [
     questions: [
       { q: '"You had me at hello." In what 1996 sports dramedy does a desperate sports agent use this line to win back the woman he loves?\n\nName the film.', a: 'Jerry Maguire (1996)', d: 1 },
       { q: '"I know kung fu." In what 1999 sci-fi blockbuster does a computer hacker discover that all of reality is a simulation?\n\nName the film.', a: 'The Matrix (1999)', d: 1 },
-      { q: '"Why so serious?" In what 2008 Christopher Nolan superhero film does a chaos-obsessed villain deliver this chilling line while recounting how he got his scars?\n\nName the film.', a: 'The Dark Knight (2008)', d: 2 },
+      { q: '"I\'ll be back." In what 1984 James Cameron sci-fi film does a relentless, time-traveling cybernetic assassin deliver this iconic line to a police station desk clerk?\n\nName the film.', a: 'The Terminator (1984)', d: 2 },
       { q: '"Royale with Cheese." In what 1994 Quentin Tarantino crime film do two hitmen casually debate fast food terminology while on the job?\n\nName the film.', a: 'Pulp Fiction (1994)', d: 2 },
-      { q: 'Set in the isolated Overlook Hotel deep in the Colorado Rockies, this 1980 Stanley Kubrick adaptation sees a snowbound caretaker descend into madness — culminating in the iconic line "Here\'s Johnny!"\n\nName the film.', a: 'The Shining (1980)', d: 3 },
+      { q: 'Directed by David Fincher in 1999, this psychological thriller follows a sleep-deprived office worker who forms an underground fight club with a mysterious soap salesman — and ends with one of cinema\'s most shocking plot twists.\n\nName the film.', a: 'Fight Club (1999)', d: 3 },
     ]
   },
   {
     name: '90s & 2000s Hits', color: '#FFB74D',
     questions: [
-      { q: 'Destiny\'s Child released the R&B smash "Say My Name" in what year? (±1 year accepted)', a: '1999', d: 1 },
+      { q: 'What is the name of the fictional coffee house where the six main characters of "Friends" spend most of their time?', a: 'Central Perk', d: 1 },
       { q: 'Which boy band released the mega-hit album "Millennium" in 1999, featuring "I Want It That Way"?', a: 'Backstreet Boys', d: 1 },
-      { q: 'In Seinfeld\'s controversial 1998 series finale, the four main characters were arrested for breaking what type of law — one that requires bystanders to help people in danger?', a: 'Good Samaritan law', d: 2 },
+      { q: 'On Seinfeld, George Costanza\'s father invented a made-up holiday celebrated with a plain aluminum pole instead of a Christmas tree. What is this holiday called?', a: 'Festivus', d: 2 },
       { q: 'Widely regarded as one of the greatest albums ever made, "OK Computer" was released in 1997 by which British rock band?', a: 'Radiohead', d: 2 },
       { q: 'Before becoming one of pop music\'s biggest stars, this singer from Burleson, Texas won the very first season of American Idol. Name her.', a: 'Kelly Clarkson', d: 3 },
     ]
@@ -72,9 +72,9 @@ const ROUNDS = [
   {
     name: 'Back In My Day', color: '#00E676',
     questions: [
-      { q: 'Before smartphones, what portable device let people listen to CDs on the go?', a: 'Discman / Portable CD Player', d: 1 },
+      { q: 'Before streaming and DVDs, people recorded TV shows at home using magnetic tape in a device that sat below their television. What was this technology called?', a: 'VCR (Video Cassette Recorder)', d: 1 },
       { q: 'What was the name of the dominant dial-up internet service that mailed millions of Americans free trial CDs throughout the 1990s?', a: 'AOL (America Online)', d: 1 },
-      { q: 'At its peak in the early 2000s, this video rental chain had nearly 9,000 stores worldwide before streaming services made it obsolete. Name it.', a: 'Blockbuster', d: 2 },
+      { q: 'Launched by Apple in October 2001 with the tagline "1,000 songs in your pocket," this portable music player transformed how the world listened to music. Name it.', a: 'The iPod', d: 2 },
       { q: 'Introduced by Motorola in 1983 as the DynaTAC 8000X, this device — which cost nearly $4,000 at launch — was the first commercially available what?', a: 'Handheld cellular / mobile phone', d: 2 },
       { q: 'Released in Japan in 1978 and later a sensation in U.S. arcades, this landmark game featured rows of alien creatures slowly descending toward the player. Name it.', a: 'Space Invaders', d: 3 },
     ]
@@ -82,11 +82,11 @@ const ROUNDS = [
   {
     name: 'US State Facts', color: '#42A5F5',
     questions: [
-      { q: 'In what US state is Nashville — known as the country music capital of the world — located?', a: 'Tennessee', d: 1 },
-      { q: 'What is the largest state in the contiguous United States?', a: 'Texas', d: 1 },
-      { q: 'Bordered by four of the five Great Lakes and divided into two separate peninsulas, what US state is sometimes called "the Great Lakes State"?', a: 'Michigan', d: 2 },
-      { q: 'This southwestern US state — home to the Grand Canyon and the Sonoran Desert — was the last of the contiguous 48 states to join the union, in 1912. Name it.', a: 'Arizona', d: 2 },
-      { q: 'Known as the "Gateway to the West," this Midwestern state\'s largest city is home to a famous 630-foot stainless steel arch monument completed in 1965. Name the state.', a: 'Missouri', d: 3 },
+      { q: 'What Tennessee city — home to Beale Street and a legendary music scene — is widely credited as the birthplace of rock and roll?', a: 'Memphis', d: 1 },
+      { q: 'What is the state capital of Texas?', a: 'Austin', d: 1 },
+      { q: 'Michigan\'s Lower Peninsula is famous for resembling the shape of a common household item — something locals use to show out-of-staters exactly where they live by holding up their hand. What does it look like?', a: 'A mitten', d: 2 },
+      { q: 'The largest Native American nation by land area in the United States, this nation\'s reservation spans northeastern Arizona, Utah, and New Mexico. Name it.', a: 'The Navajo Nation', d: 2 },
+      { q: 'In 1904, St. Louis, Missouri made history by simultaneously hosting the Summer Olympic Games and a world\'s fair — the first time both events had shared a city. By what official name is this world\'s fair known?', a: 'The Louisiana Purchase Exposition', d: 3 },
     ]
   },
   {
@@ -104,19 +104,19 @@ const ROUNDS = [
     questions: [
       { q: 'What is the most visited country in the world by international tourists?', a: 'France', d: 1 },
       { q: 'What spice — harvested from the stigmas of a crocus flower — is the most expensive spice in the world by weight?', a: 'Saffron', d: 1 },
-      { q: 'This island nation off the east coast of Africa, known for its unique wildlife, produces more than 60% of the world\'s vanilla supply. Name it.', a: 'Madagascar', d: 2 },
-      { q: 'Known for its chocolate, cheese, and precision watchmaking, this small landlocked European nation consistently ranks first in chocolate consumption per capita. Name it.', a: 'Switzerland', d: 2 },
+      { q: 'This island nation — known for its extraordinary wildlife found nowhere else on Earth, including lemurs and chameleons — produces more than 60% of the world\'s vanilla supply. Name it.', a: 'Madagascar', d: 2 },
+      { q: 'What country is the world\'s largest producer and exporter of coffee, responsible for roughly one-third of global supply?', a: 'Brazil', d: 2 },
       { q: 'This coastal South American nation — whose cuisine features fresh fish, aji peppers, and an abundance of citrus — is widely credited as the birthplace of ceviche. Name it.', a: 'Peru', d: 3 },
     ]
   },
   {
     name: 'Pop Culture', color: '#F48FB1',
     questions: [
-      { q: 'Which animated Disney film features the songs "Let It Go" and "Do You Want to Build a Snowman?"', a: 'Frozen (2013)', d: 1 },
-      { q: 'What streaming service is home to original hits like "The Crown," "Squid Game," and "Stranger Things"?', a: 'Netflix', d: 1 },
-      { q: 'This HBO fantasy series — based on George R.R. Martin\'s novels and running for 8 seasons — ended its controversial run in 2019. Name it.', a: 'Game of Thrones', d: 2 },
-      { q: 'Launched in 2011, this social media app became famous for photos and videos that disappear after being viewed, and pioneered the "Stories" format later adopted by Instagram. Name it.', a: 'Snapchat', d: 2 },
-      { q: 'This South Korean boy band, formed in 2013 under HYBE Labels, became the first K-pop act to top the Billboard Hot 100, doing so with their 2020 English-language single "Dynamite." Name them.', a: 'BTS', d: 3 },
+      { q: 'This British boy band was assembled on The X Factor in 2010 after each of its five members individually auditioned as a solo act and was eliminated — then grouped together by the judges. They became one of the best-selling music acts in history. Name them.', a: 'One Direction', d: 3 },
+      { q: 'In her acceptance speech at the 2016 Grammy Awards — where "1989" won Album of the Year — Taylor Swift publicly addressed her feud with a fellow artist who had claimed credit for launching her fame. Name that artist.', a: 'Kanye West', d: 3 },
+      { q: '"The Simpsons" holds the record as the longest-running American primetime scripted television series. In what year did the show make its debut on Fox?', a: '1989', d: 3 },
+      { q: 'Lena Headey — best known as Cersei Lannister in "Game of Thrones" — starred as Sarah Connor in what 2008 Fox sci-fi series set in the Terminator universe, which was cancelled after two seasons?', a: 'Terminator: The Sarah Connor Chronicles', d: 3 },
+      { q: 'This AMC crime drama — following high school chemistry teacher Walter White\'s transformation into a drug kingpin in Albuquerque, New Mexico — aired from 2008 to 2013 and is widely considered one of the greatest television series ever made. Name it.', a: 'Breaking Bad', d: 3 },
     ]
   },
 ];
