@@ -35,7 +35,14 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 /* ── Layout ── */
 #main { display:flex; flex:1; overflow:hidden; position:relative; z-index:1; }
 #display { flex:1; display:flex; align-items:center; justify-content:center; padding:14px; overflow:hidden; min-width:0; }
-#host { width:400px; flex-shrink:0; border-left:1px solid rgba(244,120,32,.15); background:rgba(10,18,24,.92); overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; }
+#host-col { width:400px; flex-shrink:0; border-left:1px solid rgba(244,120,32,.15); background:rgba(10,18,24,.92); display:flex; flex-direction:column; overflow:hidden; }
+#host { flex:1; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; }
+#broadcast-bar { flex-shrink:0; padding:10px 14px 12px; border-top:1px solid rgba(244,120,32,.22); background:rgba(10,18,24,.96); }
+#bcast-input { width:100%; box-sizing:border-box; background:rgba(255,255,255,.05); border:1px solid rgba(244,120,32,.25); border-radius:6px; color:#fff; font-size:12px; padding:7px 9px; resize:none; font-family:inherit; margin-bottom:6px; }
+#bcast-input:focus { outline:none; border-color:rgba(244,120,32,.6); }
+#bcast-input::placeholder { color:rgba(255,255,255,.3); }
+#btn-bcast { width:100%; padding:7px; background:rgba(244,120,32,.18); border:1px solid rgba(244,120,32,.4); border-radius:6px; color:rgba(244,120,32,.95); font-size:12px; letter-spacing:1px; font-family:'Arial Black',Arial,sans-serif; cursor:pointer; transition:background .15s; }
+#btn-bcast:hover { background:rgba(244,120,32,.3); }
 
 /* ── Slide ── */
 .slide { width:100%; height:100%; border-radius:8px; position:relative; display:flex; flex-direction:column; box-shadow:0 0 60px rgba(244,120,32,.08),0 0 0 1px rgba(244,120,32,.12); overflow:hidden; background:var(--nav2); }
@@ -266,7 +273,14 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 
 <div id="main">
   <div id="display"></div>
-  <div id="host"></div>
+  <div id="host-col">
+    <div id="host"></div>
+    <div id="broadcast-bar">
+      <div class="hp-lbl" style="margin-bottom:6px;">📢 BROADCAST TO ALL TEAMS</div>
+      <textarea id="bcast-input" rows="2" placeholder="Type a hint or reminder…"></textarea>
+      <button id="btn-bcast" onclick="sendBroadcast()">SEND TO ALL CHATS</button>
+    </div>
+  </div>
 </div>
 
 <!-- Scoreboard overlay -->
@@ -393,6 +407,19 @@ document.addEventListener('keydown', e => {
     case 's': case 'S':         emit('host:scoreboard'); break;
     case 'Escape':              closeSb(); closeAdmin(); break;
   }
+});
+
+// ── Broadcast ────────────────────────────────────────────────────────────────
+function sendBroadcast() {
+  const el = document.getElementById('bcast-input');
+  if (!el) return;
+  const msg = el.value.trim();
+  if (!msg) return;
+  emit('host:broadcast', { msg });
+  el.value = '';
+}
+document.getElementById('bcast-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendBroadcast(); }
 });
 
 // ── Restart ───────────────────────────────────────────────────────────────────

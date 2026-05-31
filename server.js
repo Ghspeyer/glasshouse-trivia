@@ -449,6 +449,18 @@ io.on('connection', socket => {
     if (ROUNDS[roundIdx]) { ROUNDS[roundIdx].note = String(note || '').slice(0, 500); bcast(); }
   });
 
+  socket.on('host:broadcast', ({ msg }) => {
+    const text = String(msg || '').trim().slice(0, 500);
+    if (!text) return;
+    const entry = { name: '📢 Host', msg: text, ts: Date.now(), broadcast: true };
+    G.teams.forEach((_, i) => {
+      const hist = getChatHistory(i);
+      hist.push(entry);
+      if (hist.length > 50) hist.shift();
+    });
+    io.emit('chat:broadcast', entry);
+  });
+
   socket.on('chat:join', (idx) => {
     [...socket.rooms].filter(r => r.startsWith('chat:')).forEach(r => socket.leave(r));
     socket.join('chat:' + idx);
