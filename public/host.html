@@ -640,13 +640,16 @@ function bindSetup() {
 
 function renderRI() {
   const col = S.roundColor;
+  const localRound = ROUNDS[S.round];
+  const numQ   = localRound?.questions.length || 0;
+  const numPts = localRound ? localRound.questions.reduce((s,q)=>s+(q.d||1),0) : 0;
   return `<div class="slide fade-in" style="background:${col}0D;border:1px solid ${col}2A;">
     <div style="position:absolute;left:0;top:0;width:6px;height:100%;background:${col};border-radius:8px 0 0 8px;"></div>
     <div class="slide-ri" style="padding-left:52px;">
       <div class="ri-lbl" style="color:${col}">ROUND ${S.roundNum} OF ${S.roundTotal}</div>
       <div class="ri-num" style="color:${col}">${S.roundNum}</div>
       <div class="ri-name" style="color:${col}">${esc(S.roundName)}</div>
-      <div class="ri-sub">${S.qTotal} Question${S.qTotal!==1?'s':''} · ${S.roundPoints} Points Up For Grabs</div>
+      <div class="ri-sub">${numQ} Question${numQ!==1?'s':''} · ${numPts} Points Up For Grabs</div>
       ${S.roundNote?`<div class="ri-note" style="color:${col}">${esc(S.roundNote)}</div>`:''}
       <div class="ri-prompt">Press Space or → to begin</div>
     </div>
