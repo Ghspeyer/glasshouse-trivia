@@ -188,8 +188,9 @@ function publicState() {
     roundNote:      r?.note        || '',
     roundTimed:     r ? (r.timed !== false) : true,
     qTotal:         r?.questions.length || 0,
+    roundPoints:    r ? r.questions.reduce((s, q) => s + (q.d || 1), 0) : 0,
     qText:          q?.q           || '',
-    qDiff:          q?.d           || 0,
+    qDiff:          q?.d           || 1,
     aText:          (G.answerShown && q) ? q.a : '',
     answerShown:    G.answerShown,
     teams:          G.teams.map(t => ({

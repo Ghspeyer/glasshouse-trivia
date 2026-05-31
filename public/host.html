@@ -468,7 +468,7 @@ function renderAdminQuestions() {
         <div class="admin-diff-btns" id="aq-d-${ri}-${qi}">
           ${[1,2,3].map(d=>`<button class="admin-diff-btn${q.d===d?' active':''}" data-d="${d}"
             style="${q.d===d?'background:'+DIFF_BG[d]+';color:'+DIFF_COLOR[d].replace('.5)','.9)')+';border-color:'+DIFF_COLOR[d].replace('.5)','.4)'):''};"
-            onclick="setDiff(${ri},${qi},${d})">${DIFF_LABEL[d]}</button>`).join('')}
+            onclick="setDiff(${ri},${qi},${d})">${DIFF_LABEL[d]} (+${d}pt)</button>`).join('')}
         </div>
         <div class="admin-field-lbl">Question</div>
         <textarea class="admin-ta" id="aq-q-${ri}-${qi}" rows="3">${escAttr(q.q)}</textarea>
@@ -624,7 +624,7 @@ function renderDisplay() {
 function renderSetup() {
   return `<div id="setup-screen"><div class="sw" style="max-width:480px;text-align:center;">
     <div class="sh">
-      <h1 style="color:var(--white);text-shadow:none;">TRIVIA NIGHT</h1>
+      <h1 style="color:#ffffff;text-shadow:none;">TRIVIA NIGHT</h1>
       <p>GlassHouse · Name teams &amp; assign players in the lobby</p>
     </div>
     <button class="btn-start" id="btn-start" style="margin-top:10px;">OPEN LOBBY →</button>
@@ -646,7 +646,7 @@ function renderRI() {
       <div class="ri-lbl" style="color:${col}">ROUND ${S.roundNum} OF ${S.roundTotal}</div>
       <div class="ri-num" style="color:${col}">${S.roundNum}</div>
       <div class="ri-name" style="color:${col}">${esc(S.roundName)}</div>
-      <div class="ri-sub">5 Questions · Points Up For Grabs</div>
+      <div class="ri-sub">${S.qTotal} Question${S.qTotal!==1?'s':''} · ${S.roundPoints} Points Up For Grabs</div>
       ${S.roundNote?`<div class="ri-note" style="color:${col}">${esc(S.roundNote)}</div>`:''}
       <div class="ri-prompt">Press Space or → to begin</div>
     </div>
@@ -670,7 +670,7 @@ function renderQ() {
         <div class="qa-text">${esc(S.aText)}</div>
       </div>
     </div>
-    ${diff?`<div class="q-diff" style="background:${DIFF_COLOR[diff]}">${DIFF_LABEL[diff]}</div>`:''}
+    ${diff?`<div class="q-diff" style="background:${DIFF_COLOR[diff]}">${DIFF_LABEL[diff]} · +${diff}pt</div>`:''}
   </div>`;
 }
 
@@ -736,7 +736,7 @@ function renderHost() {
           <div id="timer-val" style="font-size:38px;">${T.sec}</div>
           <div class="timer-row" style="gap:4px;margin-top:3px;">
             <button class="btn-t ${T.running?'on':''}" id="btn-tt" style="padding:4px 7px;"
-              onclick="emit('host:timer',{action:'${T.running?'stop':'start'}'})">
+              onclick="emit('host:timer',{action: T.running?'stop':'start'})">
               ${T.running?'⏸':'▶'}
             </button>
             <button class="btn-t" style="padding:4px 7px;" onclick="emit('host:timer',{action:'reset'})">↺</button>
@@ -777,8 +777,8 @@ function renderHost() {
           </div>
           ${resultBar}
           ${S.answerShown?`<div class="tr-btns">
-            <button class="btn-ok yes" onclick="addPt(${i})">✓ +1</button>
-            <button class="btn-ok no"  onclick="subPt(${i})">✗ Undo</button>
+            <button class="btn-ok yes" onclick="emit('host:score',{teamIdx:${i},delta:${localQ?.d||1}})">✓ +${localQ?.d||1}</button>
+            <button class="btn-ok no"  onclick="emit('host:score',{teamIdx:${i},delta:${-(localQ?.d||1)}})">✗ Undo</button>
           </div>`:''}
         </div>`;
       }).join('')}
@@ -800,8 +800,6 @@ function renderHost() {
   refreshTimer();
 }
 
-function addPt(ti) { emit('host:score',{teamIdx:ti,delta:1}); }
-function subPt(ti) { emit('host:score',{teamIdx:ti,delta:-1}); }
 
 // ── Lobby ─────────────────────────────────────────────────────────────────
 let players = [];
@@ -820,7 +818,7 @@ function renderLobby() {
 
   return `<div id="lobby-screen"><div class="lobby-wrap">
     <div class="sh">
-      <h1 style="font-size:24px;color:var(--white);text-shadow:none;">PLAYER ASSIGNMENT</h1>
+      <h1 style="font-size:24px;color:#ffffff;text-shadow:none;">PLAYER ASSIGNMENT</h1>
       <p>Players join at the link below · Assign them to teams · Designate a captain per team</p>
     </div>
 

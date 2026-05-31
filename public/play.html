@@ -551,89 +551,7 @@
   let chatCollapsed = false;
   let chatUnreadCt  = 0;
 
-  // ── Audio ────────────────────────────────────────────────────────
-  let audioCtx = null;
-  let audioUnlocked = false;
-
-  function getAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    return audioCtx;
-  }
-
-  function playTick() {
-    try {
-      const ctx = getAudio();
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.value = 1100;
-      gain.gain.setValueAtTime(0.25, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.07);
-    } catch(e) {}
-  }
-
-  function playBuzzer() {
-    try {
-      const ctx = getAudio();
-      const t0 = ctx.currentTime;
-
-      // Transient click — the "thwack" at the front of a real buzzer
-      const noiseLen = Math.floor(ctx.sampleRate * 0.022);
-      const nBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
-      const nd = nBuf.getChannelData(0);
-      for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / noiseLen);
-      const nSrc = ctx.createBufferSource();
-      nSrc.buffer = nBuf;
-      const nGain = ctx.createGain();
-      nGain.gain.value = 0.85;
-      nSrc.connect(nGain); nGain.connect(ctx.destination);
-      nSrc.start(t0); nSrc.stop(t0 + 0.025);
-
-      // Square-wave buzz with descending pitch — classic game-show sound
-      const osc = ctx.createOscillator();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(155, t0);
-      osc.frequency.linearRampToValueAtTime(100, t0 + 0.62);
-
-      const env = ctx.createGain();
-      env.gain.setValueAtTime(0, t0);
-      env.gain.linearRampToValueAtTime(0.72, t0 + 0.012); // fast attack
-      env.gain.setValueAtTime(0.68, t0 + 0.55);
-      env.gain.linearRampToValueAtTime(0, t0 + 0.68);     // hard cutoff
-
-      // Low-pass to remove ear-splitting upper harmonics
-      const lpf = ctx.createBiquadFilter();
-      lpf.type = 'lowpass';
-      lpf.frequency.value = 700;
-      lpf.Q.value = 0.4;
-
-      osc.connect(lpf); lpf.connect(env); env.connect(ctx.destination);
-      osc.start(t0 + 0.005); osc.stop(t0 + 0.72);
-    } catch(e) {}
-  }
-
-  function unlockAudio() {
-    if (audioUnlocked) return;
-    audioUnlocked = true;
-    // Play a silent buffer to unlock AudioContext on iOS/Safari
-    try {
-      const ctx = getAudio();
-      if (ctx.state === 'suspended') ctx.resume();
-      const buf = ctx.createBuffer(1, 1, 22050);
-      const src = ctx.createBufferSource();
-      src.buffer = buf; src.connect(ctx.destination); src.start(0);
-    } catch(e) {}
-  }
-
-  // Unlock on first user gesture
-  document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
-  document.addEventListener('click',      unlockAudio, { once: true });
-
   // ── State ────────────────────────────────────────────────────────
-  let prevTimerSec = -1;
 
   // ── Persistence ─────────────────────────────────────────────────
   function loadTeam() {
@@ -816,6 +734,7 @@
       <div class="round-intro-card">
         <div class="ri-num" style="color:${color}">Round ${state.roundNum}</div>
         <div class="ri-name" style="color:${color}">${esc(state.roundName)}</div>
+        <div class="ri-note" style="color:rgba(255,255,255,0.55);margin-top:6px;">${state.qTotal} Question${state.qTotal!==1?'s':''} · ${state.roundPoints} Points Up For Grabs</div>
         ${note}
       </div>
       ${teamRosterHTML()}
@@ -841,7 +760,7 @@
       : '';
 
     let resultHTML = '';
-    if (myResult === 'correct') resultHTML = `<div class="result-banner correct">✓ Correct! +1 point</div>`;
+    if (myResult === 'correct') resultHTML = `<div class="result-banner correct">✓ Correct! +${state.qDiff||1} point${(state.qDiff||1)!==1?'s':''}</div>`;
     else if (myResult === 'wrong') resultHTML = `<div class="result-banner wrong">✗ Not this time</div>`;
 
     const captain    = state.teams[teamIdx]?.captainName || '';
@@ -880,7 +799,7 @@
       <div class="q-card">
         <div class="q-num">Question ${state.qIdx + 1}</div>
         <div class="q-text">${esc(state.qText)}</div>
-        ${diff ? `<span class="q-diff ${diffCls}">${diffLabels[diff] || ''}</span>` : ''}
+        ${diff ? `<span class="q-diff ${diffCls}">${diffLabels[diff] || ''} · +${diff}pt</span>` : ''}
       </div>
       ${revealHTML}
       ${resultHTML}
@@ -1017,18 +936,8 @@
   });
 
   socket.on('timer', t => {
-    const prev = timer;
     timer = t;
     updateTimerDisplay();
-
-    // Tick for last 10 seconds (only when sec actually changes)
-    if (t.running && t.sec > 0 && t.sec <= 10 && t.sec !== prev.sec) {
-      playTick();
-    }
-    // Buzzer when countdown reaches 0
-    if (prev.running && t.sec === 0) {
-      playBuzzer();
-    }
   });
 
   // ── Chat event listeners ─────────────────────────────────────────
@@ -1055,7 +964,6 @@
     if (!name) { $joinStatus.textContent = 'Please enter your name first.'; return; }
     playerName = name;
     localStorage.setItem('gh_name', name);
-    unlockAudio();
     socket.emit('play:join', { name });
     playerJoined = true;
     $joinStatus.textContent = '⏳ Joining…';
