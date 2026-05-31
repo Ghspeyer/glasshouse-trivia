@@ -262,6 +262,7 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
   <div class="logo" style="display:flex;align-items:center;gap:8px;">
     <img src="https://framerusercontent.com/images/s57APls4GZFCEILzorWpqOuQSo.png?scale-down-to=512" alt="GlassHouse" style="height:26px;width:auto;display:block;">
     <span style="opacity:.45;font-size:10px;font-family:Calibri,sans-serif;letter-spacing:1px;">HOST</span>
+    <span id="hdr-game-name" style="font-size:11px;color:rgba(255,255,255,.55);font-family:Calibri,sans-serif;border-left:1px solid rgba(255,255,255,.12);padding-left:8px;margin-left:2px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
   </div>
   <div id="score-bar"></div>
   <div class="hdr-r">
@@ -630,6 +631,8 @@ function render() {
   renderDisplay();
   renderHost();
   if (S.scoreboardOpen) openSb(); else closeSb();
+  const gnEl = document.getElementById('hdr-game-name');
+  if (gnEl) gnEl.textContent = S.gameName || '';
 }
 
 function renderScoreBar() {
@@ -664,16 +667,20 @@ function renderSetup() {
   return `<div id="setup-screen"><div class="sw" style="max-width:480px;text-align:center;">
     <div class="sh">
       <h1 style="color:#ffffff;text-shadow:none;">TRIVIA NIGHT</h1>
-      <p>GlassHouse · Name teams &amp; assign players in the lobby</p>
+      <p>GlassHouse · Name this event so players know they're in the right place</p>
     </div>
+    <input id="game-name-input" type="text" maxlength="60" placeholder="e.g. Friday Night Trivia · May 30"
+      style="width:100%;margin-top:16px;padding:11px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#fff;font-size:15px;text-align:center;font-family:inherit;outline:none;"
+      onkeydown="if(event.key==='Enter')document.getElementById('btn-start').click()">
     <button class="btn-start" id="btn-start" style="margin-top:10px;">OPEN LOBBY →</button>
   </div></div>`;
 }
 
 function bindSetup() {
   document.getElementById('btn-start').onclick = () => {
+    const gameName = document.getElementById('game-name-input').value.trim() || 'Trivia Night';
     const teams = [0,1,2,3].map(i=>({ name: `Team ${i+1}`, emoji: '' }));
-    emit('host:createTeams', teams);
+    emit('host:createTeams', { teams, gameName });
   };
 }
 
@@ -744,9 +751,10 @@ function renderFinal() {
 
 function renderHost() {
   const el = document.getElementById('host');
-  if (!S || S.phase==='setup' || S.phase==='lobby' || S.phase==='final') {
-    el.innerHTML=''; el.style.display='none'; return;
-  }
+  const bbar = document.getElementById('broadcast-bar');
+  const hide = !S || S.phase==='setup' || S.phase==='lobby' || S.phase==='final';
+  if (bbar) bbar.style.display = hide ? 'none' : '';
+  if (hide) { el.innerHTML=''; el.style.display='none'; return; }
   el.style.display='';
   const isQ = S.phase==='q';
   const col = S.roundColor;

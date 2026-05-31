@@ -145,6 +145,7 @@ function syncTeamMembers() {
 function initState() {
   return {
     phase: 'setup',
+    gameName: '',
     teams: [],
     round: 0,
     qIdx: -1,
@@ -179,6 +180,7 @@ function publicState() {
 
   return {
     phase:          G.phase,
+    gameName:       G.gameName,
     round:          G.round,
     qIdx:           G.qIdx,
     roundName:      r?.name        || '',
@@ -274,9 +276,12 @@ io.on('connection', socket => {
   });
 
   // ── Setup → Lobby ──────────────────────────────────────────────────────────
-  socket.on('host:createTeams', teams => {
+  socket.on('host:createTeams', data => {
+    const teams = Array.isArray(data) ? data : (data.teams || []);
+    const gameName = (!Array.isArray(data) && data.gameName) ? String(data.gameName).trim().slice(0, 60) : '';
     G = initState();
     G.phase = 'lobby';
+    G.gameName = gameName;
     G.teams = teams.map((t, i) => ({
       name:        t.name  || `Team ${i+1}`,
       members:     [],

@@ -489,15 +489,15 @@
   <div id="teamSelect">
     <div class="logo-area">
       <img src="https://framerusercontent.com/images/s57APls4GZFCEILzorWpqOuQSo.png?scale-down-to=512" alt="GlassHouse" style="height:44px;width:auto;display:block;margin:0 auto 12px;">
-      <h1>Trivia Night</h1>
+      <h1 id="joinGameTitle">Trivia Night</h1>
       <p>Enter your name to join</p>
     </div>
     <div class="name-input-wrap">
       <input type="text" id="playerNameInput" class="player-name-input"
         placeholder="Your name" maxlength="30" autocomplete="off">
     </div>
-    <button class="auto-assign-btn" id="joinBtn">Join Game</button>
-    <div id="joinStatus" style="font-size:13px;color:rgba(255,255,255,0.45);text-align:center;min-height:20px;"></div>
+    <button class="auto-assign-btn" id="joinBtn" style="display:none;">Join Game</button>
+    <div id="joinStatus" style="font-size:13px;color:rgba(255,255,255,0.45);text-align:center;min-height:20px;">⏳ Waiting for the host to open the lobby…</div>
   </div>
 
   <!-- ════ GAME VIEW ════ -->
@@ -905,17 +905,36 @@
     </div>`;
   }
 
+  // ── Join screen state ────────────────────────────────────────────
+  function updateJoinScreen(s) {
+    const titleEl  = document.getElementById('joinGameTitle');
+    const btn      = document.getElementById('joinBtn');
+    const statusEl = document.getElementById('joinStatus');
+    if (titleEl && s.gameName) titleEl.textContent = s.gameName;
+    if (!btn || !statusEl) return;
+    if (s.phase === 'lobby') {
+      btn.style.display = '';
+      statusEl.textContent = '';
+    } else if (s.phase === 'setup') {
+      btn.style.display = 'none';
+      statusEl.textContent = '⏳ Waiting for the host to open the lobby…';
+    } else {
+      btn.style.display = 'none';
+      statusEl.textContent = '⏳ Waiting for the host to assign your team…';
+    }
+  }
+
   // ── Socket events ────────────────────────────────────────────────
   socket.on('state', s => {
     state = s;
 
     // If game was restarted and our team slot vanished, go back to join
     if (teamIdx !== null && (!s.teams || !s.teams[teamIdx])) {
-      clearTeam(); playerJoined = false; showJoinScreen(); return;
+      clearTeam(); playerJoined = false; showJoinScreen(); updateJoinScreen(s); return;
     }
 
     if (teamIdx !== null) { updateHeader(); joinTeamChat(); render(); }
-    // else: player is on join/waiting screen — leave them there
+    else { updateJoinScreen(s); }
   });
 
   socket.on('play:joined', ({ teamIdx: idx }) => {
