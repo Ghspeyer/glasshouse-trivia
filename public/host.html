@@ -152,6 +152,9 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .admin-diff-btn { padding:3px 12px; border-radius:6px; border:1px solid rgba(255,255,255,.12); background:transparent; color:rgba(255,255,255,.4); font-size:11px; cursor:pointer; transition:all .12s; }
 .admin-diff-btn:hover { border-color:rgba(255,255,255,.3); color:rgba(255,255,255,.7); }
 .admin-diff-btn.active { font-weight:700; }
+.admin-timed-btn { padding:5px 12px; border-radius:4px; border:1.5px solid rgba(255,255,255,.15); background:transparent; color:rgba(255,255,255,.4); font-size:11px; cursor:pointer; transition:all .12s; white-space:nowrap; }
+.admin-timed-btn:hover { border-color:rgba(244,120,32,.45); color:rgba(255,255,255,.75); }
+.admin-timed-btn.active { background:rgba(244,120,32,.12); border-color:var(--cyan); color:var(--cyan); }
 .admin-del-btn { padding:2px 6px; border:none; background:transparent; color:rgba(255,82,82,.4); cursor:pointer; font-size:13px; flex-shrink:0; border-radius:3px; line-height:1; }
 .admin-del-btn:hover { color:var(--red); background:rgba(255,82,82,.1); }
 .admin-add-round-btn { display:block; width:100%; text-align:left; padding:10px 16px; border:none; border-top:1px solid rgba(255,255,255,.06); background:transparent; color:rgba(244,120,32,.55); font-size:12px; cursor:pointer; transition:color .12s,background .12s; }
@@ -309,7 +312,7 @@ const ROUNDS = [
     {q:'The Black Death of the 14th century killed approximately what fraction of Europe\'s population?\n(Accept a range)',a:'One-third to one-half (accept 30–60%)',d:3},
     {q:'In what year did the Western Roman Empire officially fall?',a:'476 AD',d:3},
   ]},
-  { name:'Name That Tune', color:'#BB86FC', note:'Host plays a clip — name the song AND artist. All songs from 1980 onward.', questions:[
+  { name:'Name That Tune', color:'#BB86FC', note:'Host plays a clip — name the song AND artist. All songs from 1980 onward.', timed:false, questions:[
     {q:'Song 1',a:'—',d:1},
     {q:'Song 2',a:'—',d:2},
     {q:'Song 3',a:'—',d:2},
@@ -451,6 +454,10 @@ function renderAdminQuestions() {
     `<div class="admin-rname-row">
        <input class="admin-rname-input" id="aq-rname" type="text" value="${escAttr(round.name)}" placeholder="Round name">
        <button class="btn-admin-save" onclick="saveRoundName(${ri})">Rename</button>
+       <button class="admin-timed-btn ${round.timed !== false ? 'active' : ''}"
+         onclick="setRoundTimed(${ri}, ${round.timed !== false ? 'false' : 'true'})">
+         ${round.timed !== false ? '⏱ Timed' : '⏱ No Timer'}
+       </button>
      </div>` +
     round.questions.map((q, qi) => `
       <div class="admin-q-card">
@@ -517,11 +524,18 @@ function saveRoundName(ri) {
   renderAdminSidebar();
 }
 
+function setRoundTimed(ri, val) {
+  ROUNDS[ri].timed = (val === true || val === 'true');
+  emit('host:setRoundTimed', { roundIdx: ri, timed: ROUNDS[ri].timed });
+  renderAdminQuestions();
+}
+
 function addRound() {
   const newRound = {
     name: 'New Round',
     color: '#00C8FF',
     note: '',
+    timed: true,
     questions: Array.from({length:5}, (_,i) => ({ q: `Question ${i+1}`, a: `Answer ${i+1}`, d: 2 }))
   };
   ROUNDS.push(newRound);
@@ -610,8 +624,8 @@ function renderDisplay() {
 function renderSetup() {
   return `<div id="setup-screen"><div class="sw" style="max-width:480px;text-align:center;">
     <div class="sh">
-      <h1>TRIVIA NIGHT</h1>
-      <p>GlassHouse · Q2 2026 · Name teams &amp; assign players in the lobby</p>
+      <h1 style="color:var(--white);text-shadow:none;">TRIVIA NIGHT</h1>
+      <p>GlassHouse · Name teams &amp; assign players in the lobby</p>
     </div>
     <button class="btn-start" id="btn-start" style="margin-top:10px;">OPEN LOBBY →</button>
   </div></div>`;
@@ -806,7 +820,7 @@ function renderLobby() {
 
   return `<div id="lobby-screen"><div class="lobby-wrap">
     <div class="sh">
-      <h1 style="font-size:24px;">PLAYER ASSIGNMENT</h1>
+      <h1 style="font-size:24px;color:var(--white);text-shadow:none;">PLAYER ASSIGNMENT</h1>
       <p>Players join at the link below · Assign them to teams · Designate a captain per team</p>
     </div>
 

@@ -39,6 +39,7 @@ const ROUNDS = [
   {
     name: 'Name That Tune', color: '#BB86FC',
     note: 'Host plays a clip — name the song AND artist. All songs from 1980 onward.',
+    timed: false,
     questions: [
       { q: 'Song 1', a: '—', d: 1 },
       { q: 'Song 2', a: '—', d: 2 },
@@ -185,6 +186,7 @@ function publicState() {
     roundTotal:     ROUNDS.length,
     roundColor:     r?.color       || '#00C8FF',
     roundNote:      r?.note        || '',
+    roundTimed:     r ? (r.timed !== false) : true,
     qTotal:         r?.questions.length || 0,
     qText:          q?.q           || '',
     qDiff:          q?.d           || 0,
@@ -222,8 +224,6 @@ function resetTimer() { stopTimer(); timer.sec = 30; io.emit('timer', { ...timer
 // ════════════════════════════════════════════════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════════════════════════════════════════════════
-const NAME_THAT_TUNE_ROUND = 2; // index of the Name That Tune round — no auto-timer
-
 function doNext() {
   resetTimer();
   G.answerShown = false;
@@ -243,8 +243,7 @@ function doNext() {
     }
   }
 
-  // Auto-start timer when entering a question — except Name That Tune
-  if (G.phase === 'q' && G.round !== NAME_THAT_TUNE_ROUND) {
+  if (G.phase === 'q' && ROUNDS[G.round].timed !== false) {
     startTimer();
   }
 
@@ -422,11 +421,16 @@ io.on('connection', socket => {
       name:      round.name      || 'New Round',
       color:     round.color     || '#00C8FF',
       note:      round.note      || '',
+      timed:     round.timed !== false,
       questions: (round.questions || []).map(q => ({
         q: q.q || '', a: q.a || '', d: q.d || 2
       }))
     });
     bcast();
+  });
+
+  socket.on('host:setRoundTimed', ({ roundIdx, timed }) => {
+    if (ROUNDS[roundIdx]) { ROUNDS[roundIdx].timed = !!timed; bcast(); }
   });
 
   socket.on('host:deleteRound', (idx) => {
