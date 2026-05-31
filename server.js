@@ -13,7 +13,7 @@ const PORT       = process.env.PORT || 3000;
 // ════════════════════════════════════════════════════════════════════════════
 // GAME DATA  (editable at runtime via host:editQuestion)
 // ════════════════════════════════════════════════════════════════════════════
-const TEAM_COLORS = ['#00C8FF', '#FF6B6B', '#FFD700', '#00E676'];
+const TEAM_COLORS = ['#00C8FF', '#FF6B6B', '#FFD700', '#00E676', '#BB86FC', '#FFB74D', '#FF8A65', '#80DEEA'];
 
 const ROUNDS = [
   {
@@ -289,6 +289,22 @@ io.on('connection', socket => {
     resetTimer();
     bcast();
     broadcastPlayers();
+  });
+
+  socket.on('host:addTeam', () => {
+    if (G.phase !== 'lobby' || G.teams.length >= 8) return;
+    const i = G.teams.length;
+    G.teams.push({ name: `Team ${i+1}`, members: [], emoji: '', score: 0, color: TEAM_COLORS[i] || '#AAAAAA', captainName: '' });
+    bcast(); broadcastPlayers();
+  });
+
+  socket.on('host:removeTeam', () => {
+    if (G.phase !== 'lobby' || G.teams.length <= 1) return;
+    const lastIdx = G.teams.length - 1;
+    Object.values(activePlayers).forEach(p => { if (p.teamIdx === lastIdx) { p.teamIdx = null; p.isCaptain = false; } });
+    G.teams.pop();
+    syncTeamMembers();
+    bcast(); broadcastPlayers();
   });
 
   // ── Lobby → Game ───────────────────────────────────────────────────────────

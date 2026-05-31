@@ -380,7 +380,7 @@ const ROUNDS = [
 const DIFF_LABEL = {1:'Easy',2:'Medium',3:'Hard'};
 const DIFF_COLOR = {1:'rgba(0,230,118,.5)',2:'rgba(255,183,77,.5)',3:'rgba(255,82,82,.5)'};
 const DIFF_BG    = {1:'rgba(0,230,118,.18)',2:'rgba(255,183,77,.18)',3:'rgba(255,82,82,.18)'};
-const TEAM_COLORS = ['#00C8FF','#FF6B6B','#FFD700','#00E676'];
+const TEAM_COLORS = ['#00C8FF','#FF6B6B','#FFD700','#00E676','#BB86FC','#FFB74D','#FF8A65','#80DEEA'];
 const EMOJI_PRESETS = ['🐆','🦁','🐯','🦊','🦅','🐺','🐻','🦈','🦋','🐉','🦄','🎯'];
 
 // ── Socket ────────────────────────────────────────────────────────────────────
@@ -877,6 +877,17 @@ function renderLobby() {
                 → ${esc(t.name)}
               </button>`).join('')}
           </div>`).join('')}
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button onclick="emit('host:addTeam')" ${teams.length >= 8 ? 'disabled' : ''}
+        style="flex:1;padding:8px;border-radius:6px;border:1px dashed rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;">
+        ＋ Add Team
+      </button>
+      <button onclick="emit('host:removeTeam')" ${teams.length <= 1 ? 'disabled' : ''}
+        style="flex:1;padding:8px;border-radius:6px;border:1px dashed rgba(255,82,82,.3);background:transparent;color:rgba(255,82,82,.7);font-size:12px;cursor:pointer;">
+        − Remove Last Team
+      </button>
     </div>
 
     <div class="lobby-teams">
