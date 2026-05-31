@@ -441,6 +441,7 @@
   .chat-author.is-other { color: var(--cyan);  }
   .chat-text  { color: rgba(255,255,255,0.85); }
   .chat-msg.bcast { background: rgba(244,120,32,0.13); border-left: 2px solid var(--cyan); border-radius: 4px; padding: 4px 8px; margin: 3px 0; }
+  .chat-msg.system { text-align: center; font-size: 11px; color: rgba(255,255,255,0.35); font-style: italic; padding: 3px 0; }
   .chat-empty { font-size: 12px; color: rgba(255,255,255,0.3); text-align: center; padding: 12px 0; }
 
   .chat-input-row {
@@ -662,7 +663,10 @@
     const empty = $chatMsgs.querySelector('.chat-empty');
     if (empty) empty.remove();
     const div = document.createElement('div');
-    if (entry.broadcast) {
+    if (entry.system) {
+      div.className = 'chat-msg system';
+      div.textContent = entry.msg;
+    } else if (entry.broadcast) {
       div.className = 'chat-msg bcast';
       div.innerHTML = `<span class="chat-author" style="color:var(--cyan)">📢 Host:</span> <span class="chat-text">${esc(entry.msg)}</span>`;
     } else {

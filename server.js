@@ -362,6 +362,11 @@ io.on('connection', socket => {
     broadcastPlayers();
     const sid = activePlayers[lk].sid;
     if (sid) io.to(sid).emit('play:joined', { teamIdx });
+    const joinMsg = { name: '', msg: `${activePlayers[lk].name} was added to the team`, ts: Date.now(), system: true };
+    const hist = getChatHistory(teamIdx);
+    hist.push(joinMsg);
+    if (hist.length > 50) hist.shift();
+    io.to('chat:' + teamIdx).emit('chat:msg', joinMsg);
   });
 
   // ── Host: set captain ──────────────────────────────────────────────────────
