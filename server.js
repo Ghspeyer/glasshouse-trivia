@@ -19,21 +19,21 @@ const ROUNDS = [
   {
     name: 'General Knowledge', color: '#00C8FF',
     questions: [
-      { q: 'How many bones does an adult human body have?', a: '206', d: 1 },
-      { q: 'What is the ONLY country in the world that borders both Spain AND France?', a: 'Andorra', d: 1 },
-      { q: 'How many time zones does Russia span?', a: '11 time zones', d: 2 },
-      { q: 'What is the chemical symbol for gold, and what Latin word does it derive from?', a: 'Au — from "Aurum" (Latin for gold)', d: 2 },
-      { q: 'How many countries in the world share a land border with China?', a: '14 countries', d: 3 },
+      { q: 'What is the capital city of Australia?', a: 'Canberra', d: 1 },
+      { q: 'How many colors are in a standard rainbow?', a: '7 (red, orange, yellow, green, blue, indigo, violet)', d: 1 },
+      { q: 'The world\'s longest river flows northward through multiple countries before emptying into the Mediterranean Sea. Name it.', a: 'The Nile', d: 2 },
+      { q: 'Named after the Greek god of the Sun, this element is the second lightest in the universe and makes your voice sound squeaky when inhaled. Name it.', a: 'Helium', d: 2 },
+      { q: 'Standing at 19,341 feet in East Africa, this dormant stratovolcano is the tallest free-standing mountain on Earth and the highest point on the African continent. Name it.', a: 'Mount Kilimanjaro', d: 3 },
     ]
   },
   {
     name: 'World History', color: '#FFD700',
     questions: [
-      { q: 'Who was the first woman to win a Nobel Prize?', a: 'Marie Curie (1903 · Physics)', d: 1 },
-      { q: 'The Black Death of the 14th century killed approximately what fraction of Europe\'s population?\n(Accept a range)', a: 'One-third to one-half (accept 30–60%)', d: 1 },
-      { q: 'In what year was the Magna Carta signed, and which English king was forced to seal it?', a: '1215 · King John', d: 2 },
-      { q: 'How many amendments does the United States Constitution currently have?', a: '27 amendments', d: 2 },
-      { q: 'In what year did the Western Roman Empire officially fall?', a: '476 AD', d: 3 },
+      { q: 'Who was the first woman to win a Nobel Prize?', a: 'Marie Curie (Physics, 1903)', d: 1 },
+      { q: 'The Black Death of the 14th century killed approximately what fraction of Europe\'s population? (Accept a range)', a: 'One-third to one-half (30–60%)', d: 1 },
+      { q: 'Sealed at a meadow called Runnymede in 1215, this landmark royal charter was one of the first documents to establish limits on a king\'s power. What was it called?', a: 'The Magna Carta', d: 2 },
+      { q: 'Starting with the Bill of Rights in 1791, the U.S. Constitution has been amended over more than two centuries. How many amendments does it currently have?', a: '27 amendments', d: 2 },
+      { q: 'When the Germanic chieftain Odoacer deposed the last emperor Romulus Augustulus, historians mark this as the official end of what ancient empire?', a: 'The Western Roman Empire (476 AD)', d: 3 },
     ]
   },
   {
@@ -50,23 +50,23 @@ const ROUNDS = [
   },
   {
     name: 'Movie Quotes', color: '#FF6B6B',
-    note: 'Name the film (and actor/character when asked). All films from 1980 onward.',
+    note: 'Name the film. All films from 1980 onward.',
     questions: [
-      { q: 'In what 1996 sports dramedy does a desperate agent try to win back his estranged wife with a heartfelt speech, only for her to stop him mid-sentence with "You had me at hello"?\n\nName the film.', a: 'Jerry Maguire (1996)', d: 1 },
-      { q: 'In what 1999 sci-fi film does a computer hacker learn that all of reality is a simulation, and a mentor offers him a choice between a red pill and a blue pill?\n\nName the film AND the actress who played Trinity.', a: 'The Matrix (1999) — Carrie-Anne Moss', d: 1 },
-      { q: 'In what 2008 Christopher Nolan film does the villain whisper "Why so serious?" while recounting how he got his scars?\n\nName the film AND the actor who played the villain.', a: 'The Dark Knight (2008) — Heath Ledger', d: 2 },
-      { q: 'In what 1994 film do two hitmen debate the "Royale with Cheese" — the French name for a Quarter Pounder?\n\nName the film AND its director.', a: 'Pulp Fiction (1994) — Quentin Tarantino', d: 2 },
-      { q: 'In what 1980 psychological horror film does a snowbound hotel caretaker hack through a bathroom door and shout "Here\'s Johnny!" at his terrified wife?\n\nName the film AND its director.', a: 'The Shining (1980) — Stanley Kubrick', d: 3 },
+      { q: '"You had me at hello." In what 1996 sports dramedy does a desperate sports agent use this line to win back the woman he loves?\n\nName the film.', a: 'Jerry Maguire (1996)', d: 1 },
+      { q: '"I know kung fu." In what 1999 sci-fi blockbuster does a computer hacker discover that all of reality is a simulation?\n\nName the film.', a: 'The Matrix (1999)', d: 1 },
+      { q: '"Why so serious?" In what 2008 Christopher Nolan superhero film does a chaos-obsessed villain deliver this chilling line while recounting how he got his scars?\n\nName the film.', a: 'The Dark Knight (2008)', d: 2 },
+      { q: '"Royale with Cheese." In what 1994 Quentin Tarantino crime film do two hitmen casually debate fast food terminology while on the job?\n\nName the film.', a: 'Pulp Fiction (1994)', d: 2 },
+      { q: 'Set in the isolated Overlook Hotel deep in the Colorado Rockies, this 1980 Stanley Kubrick adaptation sees a snowbound caretaker descend into madness — culminating in the iconic line "Here\'s Johnny!"\n\nName the film.', a: 'The Shining (1980)', d: 3 },
     ]
   },
   {
     name: '90s & 2000s Hits', color: '#FFB74D',
     questions: [
-      { q: 'Destiny\'s Child released "Say My Name" in what year? (±1 year accepted)', a: '1999', d: 1 },
+      { q: 'Destiny\'s Child released the R&B smash "Say My Name" in what year? (±1 year accepted)', a: '1999', d: 1 },
       { q: 'Which boy band released the mega-hit album "Millennium" in 1999, featuring "I Want It That Way"?', a: 'Backstreet Boys', d: 1 },
-      { q: 'In what year did "Seinfeld" air its controversial series finale, and what crime were the four main characters put on trial for?', a: '1998 · Violating a Good Samaritan law (failing to help a carjacking victim)', d: 2 },
-      { q: 'Which British rock band released the album "OK Computer" in 1997, widely considered one of the greatest albums ever made?', a: 'Radiohead', d: 2 },
-      { q: 'What year did "American Idol" first air in the United States, and who won that inaugural season?', a: '2002 · Kelly Clarkson', d: 3 },
+      { q: 'In Seinfeld\'s controversial 1998 series finale, the four main characters were arrested for breaking what type of law — one that requires bystanders to help people in danger?', a: 'Good Samaritan law', d: 2 },
+      { q: 'Widely regarded as one of the greatest albums ever made, "OK Computer" was released in 1997 by which British rock band?', a: 'Radiohead', d: 2 },
+      { q: 'Before becoming one of pop music\'s biggest stars, this singer from Burleson, Texas won the very first season of American Idol. Name her.', a: 'Kelly Clarkson', d: 3 },
     ]
   },
   {
@@ -74,39 +74,49 @@ const ROUNDS = [
     questions: [
       { q: 'Before smartphones, what portable device let people listen to CDs on the go?', a: 'Discman / Portable CD Player', d: 1 },
       { q: 'What was the name of the dominant dial-up internet service that mailed millions of Americans free trial CDs throughout the 1990s?', a: 'AOL (America Online)', d: 1 },
-      { q: 'This video rental giant had nearly 9,000 stores worldwide at its peak.\nName it AND the year it filed for bankruptcy.', a: 'Blockbuster · 2010', d: 2 },
-      { q: 'The Motorola DynaTAC 8000X, introduced in 1983, holds what distinction in consumer technology — and approximately how much did it cost at launch?', a: 'First commercially available handheld cellular phone · ~$3,995', d: 2 },
-      { q: 'What year did "Space Invaders" first appear in U.S. arcades, and which Japanese company developed it?', a: '1978 · Taito Corporation', d: 3 },
+      { q: 'At its peak in the early 2000s, this video rental chain had nearly 9,000 stores worldwide before streaming services made it obsolete. Name it.', a: 'Blockbuster', d: 2 },
+      { q: 'Introduced by Motorola in 1983 as the DynaTAC 8000X, this device — which cost nearly $4,000 at launch — was the first commercially available what?', a: 'Handheld cellular / mobile phone', d: 2 },
+      { q: 'Released in Japan in 1978 and later a sensation in U.S. arcades, this landmark game featured rows of alien creatures slowly descending toward the player. Name it.', a: 'Space Invaders', d: 3 },
     ]
   },
   {
     name: 'US State Facts', color: '#42A5F5',
     questions: [
-      { q: 'What is the largest US state by total area?', a: 'Alaska', d: 1 },
-      { q: 'Which US state is nicknamed "The Sunshine State"?', a: 'Florida', d: 1 },
-      { q: 'Which US state has the most counties, with 254?', a: 'Texas', d: 2 },
-      { q: 'What is the only US state with a one-syllable name?', a: 'Maine', d: 2 },
-      { q: 'Four US states meet at a single point known as the "Four Corners."\nName all four.', a: 'Utah · Colorado · Arizona · New Mexico\n(all four required)', d: 3 },
+      { q: 'In what US state is Nashville — known as the country music capital of the world — located?', a: 'Tennessee', d: 1 },
+      { q: 'What is the largest state in the contiguous United States?', a: 'Texas', d: 1 },
+      { q: 'Bordered by four of the five Great Lakes and divided into two separate peninsulas, what US state is sometimes called "the Great Lakes State"?', a: 'Michigan', d: 2 },
+      { q: 'This southwestern US state — home to the Grand Canyon and the Sonoran Desert — was the last of the contiguous 48 states to join the union, in 1912. Name it.', a: 'Arizona', d: 2 },
+      { q: 'Known as the "Gateway to the West," this Midwestern state\'s largest city is home to a famous 630-foot stainless steel arch monument completed in 1965. Name the state.', a: 'Missouri', d: 3 },
     ]
   },
   {
-    name: 'Sports & Pop Culture', color: '#FFD700',
+    name: 'Sports', color: '#FFD700',
     questions: [
       { q: 'Who holds the record for the most Grand Slam titles in women\'s tennis singles history?', a: 'Serena Williams (23 titles)', d: 1 },
-      { q: 'What country has won the most FIFA World Cup titles?\n(Bonus: how many times?)', a: 'Brazil — 5 times\n(1958, 1962, 1970, 1994, 2002)', d: 1 },
-      { q: 'Who holds the NFL record for most career rushing yards, and with which team did he spend the majority of his career?', a: 'Emmitt Smith · Dallas Cowboys', d: 2 },
-      { q: 'In what year did Michael Jordan win his FIRST NBA Championship with the Chicago Bulls?', a: '1991', d: 2 },
-      { q: 'Which NFL quarterback was first to throw for more than 5,000 yards in a single regular season, and in what year?', a: 'Dan Marino (Miami Dolphins) · 1984', d: 3 },
+      { q: 'What country has won the most FIFA World Cup titles?', a: 'Brazil (5 times — 1958, 1962, 1970, 1994, 2002)', d: 1 },
+      { q: 'Wearing #22 for the Dallas Cowboys for most of his career, who holds the NFL record for most career rushing yards?', a: 'Emmitt Smith', d: 2 },
+      { q: 'Michael Jordan led the Chicago Bulls to six NBA championships. In what year did they win the first one?', a: '1991', d: 2 },
+      { q: 'Playing for the Miami Dolphins in the 1980s, this Hall of Fame quarterback — widely regarded as the greatest to never win a Super Bowl — was the first to throw for more than 5,000 yards in a single NFL season. Name him.', a: 'Dan Marino', d: 3 },
     ]
   },
   {
     name: 'Food & Travel', color: '#00C8FF',
     questions: [
       { q: 'What is the most visited country in the world by international tourists?', a: 'France', d: 1 },
-      { q: 'What spice — harvested from the stigmas of a specific flower — is the most expensive spice in the world by weight?', a: 'Saffron', d: 1 },
-      { q: 'What country produces more than 60% of the world\'s vanilla supply?', a: 'Madagascar', d: 2 },
-      { q: 'Which country consumes the most chocolate per capita in the world?', a: 'Switzerland', d: 2 },
-      { q: '"Ceviche" is a dish where raw seafood is "cooked" without heat.\nWhat country is credited as its origin, and what acid is traditionally used to cure the fish?', a: 'Peru · Lime juice (citric acid)', d: 3 },
+      { q: 'What spice — harvested from the stigmas of a crocus flower — is the most expensive spice in the world by weight?', a: 'Saffron', d: 1 },
+      { q: 'This island nation off the east coast of Africa, known for its unique wildlife, produces more than 60% of the world\'s vanilla supply. Name it.', a: 'Madagascar', d: 2 },
+      { q: 'Known for its chocolate, cheese, and precision watchmaking, this small landlocked European nation consistently ranks first in chocolate consumption per capita. Name it.', a: 'Switzerland', d: 2 },
+      { q: 'This coastal South American nation — whose cuisine features fresh fish, aji peppers, and an abundance of citrus — is widely credited as the birthplace of ceviche. Name it.', a: 'Peru', d: 3 },
+    ]
+  },
+  {
+    name: 'Pop Culture', color: '#F48FB1',
+    questions: [
+      { q: 'Which animated Disney film features the songs "Let It Go" and "Do You Want to Build a Snowman?"', a: 'Frozen (2013)', d: 1 },
+      { q: 'What streaming service is home to original hits like "The Crown," "Squid Game," and "Stranger Things"?', a: 'Netflix', d: 1 },
+      { q: 'This HBO fantasy series — based on George R.R. Martin\'s novels and running for 8 seasons — ended its controversial run in 2019. Name it.', a: 'Game of Thrones', d: 2 },
+      { q: 'Launched in 2011, this social media app became famous for photos and videos that disappear after being viewed, and pioneered the "Stories" format later adopted by Instagram. Name it.', a: 'Snapchat', d: 2 },
+      { q: 'This South Korean boy band, formed in 2013 under HYBE Labels, became the first K-pop act to top the Billboard Hot 100, doing so with their 2020 English-language single "Dynamite." Name them.', a: 'BTS', d: 3 },
     ]
   },
 ];
