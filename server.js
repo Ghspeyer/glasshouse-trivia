@@ -41,11 +41,11 @@ const ROUNDS = [
     note: 'Host plays a clip — name the song AND artist. All songs from 1980 onward.',
     timed: false,
     questions: [
-      { q: 'Song 1', a: '—', d: 1 },
-      { q: 'Song 2', a: '—', d: 1 },
-      { q: 'Song 3', a: '—', d: 2 },
-      { q: 'Song 4', a: '—', d: 2 },
-      { q: 'Song 5', a: '—', d: 3 },
+      { q: 'Song 1', a: '"Blank Space" – Taylor Swift', d: 1 },
+      { q: 'Song 2', a: '"Wake Me Up Before You Go-Go" – Wham!', d: 1 },
+      { q: 'Song 3', a: '"Get Lucky" – Daft Punk ft. Pharrell Williams', d: 2 },
+      { q: 'Song 4', a: '"Dixieland Delight" – Alabama', d: 2 },
+      { q: 'Song 5', a: '"To Be With You" – Mr. Big', d: 3 },
     ]
   },
   {
